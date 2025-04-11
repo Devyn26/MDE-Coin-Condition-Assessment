@@ -1,0 +1,24 @@
+# ignore idea folder
+/.idea
+
+# Scraped Images are now uploaded via google drive
+/ScrapedImages
+
+# ignore DatabaseBranch
+# IMPORTANT: Never deleted the following line, this is how the centralized database is maintained
+/DatabaseBranch
+
+# ignore legacy folder
+/Legacy
+
+# ignore toning team folders...I'm still finalizing some things I'll merge with the branch soonᵀᴹ
+/MD_presentationDataResults
+/MD_InputDataOfCoinForGraphs
+/MD_HelperCode
+/MD_CurrentDevelopingCode
+
+# ignore virtual python
+/venv
+
+# ignore other files
+/__pycache__
