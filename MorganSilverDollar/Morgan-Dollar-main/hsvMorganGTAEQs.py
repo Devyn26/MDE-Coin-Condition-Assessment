@@ -1,10 +1,13 @@
+'''
+Updated for F25-06 coin assessment team
+Updated by: Eric Morley
+Date: 3/05/2025
+'''
 import cv2 as cv2
 import os
 import numpy as np
 import statistics
-import pandas as pd
 import math
-import sys
 import time
 
 # import ImageOpener
@@ -98,17 +101,17 @@ def Calculate_HSV(image):
     print('\t', "The maximum value for Hue is", maxValHue)
     if maxValHue == 567.89:
         print("\n\nError!\n\n")
-    hsvHueDegree = np.round_(np.where(hsvHCalc == 0, 0, np.where(hsvHCalc < 0, np.add(np.multiply(hsvHCalc, 60), 360),
+    hsvHueDegree = np.round(np.where(hsvHCalc == 0, 0, np.where(hsvHCalc < 0, np.add(np.multiply(hsvHCalc, 60), 360),
                                                                  np.multiply(hsvHCalc, 60))), 3)
 
     colorMaxNormalized = np.divide(colorMax, 255)
     colorRangeNormalized = np.divide(colorRange, 255)
     # Find the value, the value is determined by the color with the greatest strength in RGB
     # V = round(C_high_bin * 100, 3)
-    V = np.round_(np.multiply(colorMaxNormalized, 100), 3)
+    V = np.round(np.multiply(colorMaxNormalized, 100), 3)
     # Find the saturation by applying a conversion formula, if all RGB values are the same then there is no sat
     Saturation = np.where(colorMax == colorMin, 0,
-                          np.round_(np.multiply(np.divide(colorRangeNormalized, colorMaxNormalized), 100), 3))
+                          np.round(np.multiply(np.divide(colorRangeNormalized, colorMaxNormalized), 100), 3))
     HSV_val = np.array([hsvHueDegree, Saturation, V])
     return HSV_val
 

@@ -8,18 +8,18 @@ Original Author: Creed Jones
 Date: 8 Sep 2022
 Modified By: Lizzie LaVallee, Jasper Emick, Phil Johnson
 Date: 10 Mar 2023
+
+Updated for F25-06 coin assessment team
+Updated by: Eric Morley
+Date: 3/05/2025
 """
 
 # Coins2022/CoinImage.py     Creed Jones     VT ECE  Sept 8, 2022
 # development in support of the MDE coin grading teams AY22-23
 # CoinImage objects are loaded, operated on, displayed and stored as needed
-import sys
-
 import cv2
 import math
 import numpy as np
-import os
-from skimage import morphology
 from MaskImage import MaskImage
 
 

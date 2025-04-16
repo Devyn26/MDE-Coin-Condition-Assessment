@@ -5,10 +5,18 @@ InputCoin.py
 
 Author: Jasper Emick, Lizzie LaVallee
 Date: 10 Mar 2023
+
+Updated for F25-06 coin assessment team
+Updated by: Eric Morley
+Date: 3/05/2025
+
+F25-06: 
+- Still need to remove toning code
+- Still has deprecated code to remove
+- Still some unused library calls
 """
 import numpy as np
 import os
-from sklearn.preprocessing import StandardScaler
 
 import hsvMorganGTAEQs as eq
 from CoinImage import CoinImage
@@ -191,10 +199,10 @@ if __name__ == '__main__':
     # TEST PDF
     c = inputCoin()
     oPath = os.path.abspath('ScrapedImages/obverse') + '\\'
-    oImg = cv2.imread(oPath + "Morgan 1887 NGC-CAC MS63 2263040 obverse.jpg")
+    oImg = cv2.imread(oPath + "Morgan 1880-CC PCGS MS63 2432444 obverse.jpg")
     oImg = cv2.cvtColor(oImg, cv2.COLOR_BGR2RGB)
     rPath = os.path.abspath('ScrapedImages/reverse') + '\\'
-    rImg = cv2.imread(rPath + "Morgan 1887 NGC-CAC MS63 2263040 reverse.jpg")
+    rImg = cv2.imread(rPath + "Morgan 1880-CC PCGS MS63 2432444 reverse.jpg")
     rImg = cv2.cvtColor(rImg, cv2.COLOR_BGR2RGB)
 
     c.coinInitialize(oImg, rImg)

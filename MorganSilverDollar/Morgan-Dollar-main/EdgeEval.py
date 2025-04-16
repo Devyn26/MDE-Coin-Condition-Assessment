@@ -5,13 +5,15 @@ Used for determining the edge frequency of each coin, also contains preprocessin
 
 Author: Jasper Emick
 Date: 10 Mar 2023
+
+Updated for F25-06 coin assessment team
+Updated by: Eric Morley
+Date: 3/05/2025
 """
 import numpy as np
 import cv2
 from skimage import morphology
 from matplotlib import pyplot as plt
-import os
-from PIL import Image
 
 
 def getEdgeReading(coin, mask, isCustom=True):
@@ -90,8 +92,8 @@ def sobelEdge(blur):
     abs_grad_x = cv2.convertScaleAbs(grad_x)
     abs_grad_y = cv2.convertScaleAbs(grad_y)
 
-    dx = abs_grad_x.astype(np.float)
-    dy = abs_grad_y.astype(np.float)
+    dx = abs_grad_x.astype(np.float32)
+    dy = abs_grad_y.astype(np.float32)
 
     return dx, dy
 

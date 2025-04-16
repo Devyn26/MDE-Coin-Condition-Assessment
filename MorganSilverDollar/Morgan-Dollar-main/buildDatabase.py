@@ -5,15 +5,13 @@ Comprised of small helper functions used to parse data evaluated from each coin 
 
 Author: Jasper Emick, Zymmorrah Myers
 Date: 10 Mar 23
+
+Updated for F25-06 coin assessment team
+Updated by: Eric Morley
+Date: 3/05/2025
 """
 
-import cv2
 import pandas as pd
-import numpy
-import openpyxl
-import csv
-from tempfile import NamedTemporaryFile
-import shutil
 
 
 def parse_coin(imgName, descList):
@@ -84,7 +82,7 @@ def compileHSVData(avgHSV, percent, classification, img):
     if coinInfo.count('') > 0:
         coinInfo.remove('')
 
-    face = coinInfo[-1][:-4]
+    face = coinInfo[-1][:-4] # Not Used
     inventory = coinInfo[-2]
 
     csvFile = "image_database.csv"
@@ -162,7 +160,7 @@ def check(score, filename):
     if coinInfo.count('') > 0:
         coinInfo.remove('')
 
-    face = coinInfo[-1][:-4]
+    face = coinInfo[-1][:-4] # Not used
     inventory = coinInfo[-2]
 
     csvFile = "image_database.csv"

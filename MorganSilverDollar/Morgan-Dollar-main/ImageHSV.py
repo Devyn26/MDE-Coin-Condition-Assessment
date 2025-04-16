@@ -1,5 +1,9 @@
+'''
+Updated for F25-06 coin assessment team
+Updated by: Eric Morley
+Date: 3/05/2025
+'''
 import cv2
-import os
 
 import numpy
 
@@ -8,9 +12,6 @@ import numpy as np
 import statistics
 import math
 import matplotlib.pyplot as plt
-import csv
-import pandas as pd
-import imutils
 import time
 from sklearn.decomposition import PCA
 from sklearn.preprocessing import StandardScaler

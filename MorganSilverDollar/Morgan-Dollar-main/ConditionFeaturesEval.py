@@ -7,11 +7,14 @@ Original Author: Creed Jones
 Date: 8 Sep 2022
 Modified By: Jasper Emick, Lizzie LaVallee
 Date: 10 Mar 2023
+
+Updated for F25-06 coin assessment team
+Updated by: Eric Morley
+Date: 3/05/2025
 """
 import numpy as np
 import pandas as pd
 import os
-import cv2
 
 from CoinImage import CoinImage
 from MaskImage import MaskImage

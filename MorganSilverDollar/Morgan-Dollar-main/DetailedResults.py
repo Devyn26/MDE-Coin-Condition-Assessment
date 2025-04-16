@@ -1,8 +1,13 @@
+'''
+Updated for F25-06 coin assessment team
+Updated by: Eric Morley
+Date: 3/05/2025
+'''
 from fpdf import FPDF
 import cv2
 import os
 from PIL import Image
-
+import tempfile
 # A4 orientation Standard
 PDF_WIDTH = 210
 PDF_HEIGHT = 297
@@ -60,20 +65,34 @@ class PDF(FPDF):
         # Original Input coin Images
         self.rect(20.0, 35.0, 80.0, 80.0, 'D')
         self.set_xy(20.0, 35.0)
-        self.image(self.ogObverse, w=80, h=80)
+        with tempfile.NamedTemporaryFile(delete=False, suffix='.png') as tmp_file_obverse:
+            self.ogObverse.save(tmp_file_obverse.name, 'PNG')  # Save as PNG (or any other format)
+            tmp_file_obverse.close()  # Close the file so it can be accessed by FPDF
+            self.image(tmp_file_obverse.name, w=80, h=80)
 
         self.rect(110.0, 35.0, 80.0, 80.0, 'D')
         self.set_xy(110.0, 35.0)
-        self.image(self.ogReverse, w=80, h=80)
+        with tempfile.NamedTemporaryFile(delete=False, suffix='.png') as tmp_file_reverse:
+            self.ogReverse.save(tmp_file_reverse.name, 'PNG')
+            tmp_file_reverse.close()  # Close the file for FPDF to access
+            self.image(tmp_file_reverse.name, w=80, h=80)
 
         # Raw edge filter (no mask)
         self.rect(20.0, 155.0, 80.0, 80.0, 'D')
         self.set_xy(20.0, 155.0)
-        self.image(Image.fromarray(self.conditionObverse), w=80, h=80)
+        with tempfile.NamedTemporaryFile(delete=False, suffix='.png') as tmp_file_condition_obverse:
+            condition_obverse_image = Image.fromarray(self.conditionObverse)
+            condition_obverse_image.save(tmp_file_condition_obverse.name, 'PNG')
+            tmp_file_condition_obverse.close()  # Close the file for FPDF to access
+            self.image(tmp_file_condition_obverse.name, w=80, h=80)
 
         self.rect(110.0, 155.0, 80.0, 80.0, 'D')
         self.set_xy(110.0, 155.0)
-        self.image(Image.fromarray(self.conditionReverse), w=80, h=80)
+        with tempfile.NamedTemporaryFile(delete=False, suffix='.png') as tmp_file_condition_reverse:
+            condition_reverse_image = Image.fromarray(self.conditionReverse)
+            condition_reverse_image.save(tmp_file_condition_reverse.name, 'PNG')
+            tmp_file_condition_reverse.close()  # Close the file for FPDF to access
+            self.image(tmp_file_condition_reverse.name, w=80, h=80)
 
     def genTextPageTwo(self):
         # Sub-Title: "Flat Regions"
@@ -90,20 +109,40 @@ class PDF(FPDF):
         # Flat mask
         self.rect(20.0, 40.0, 80.0, 80.0, 'D')
         self.set_xy(20.0, 40.0)
-        self.image(Image.fromarray(self.flatObverse), w=80, h=80)
+        # Save flatObverse image to a temporary file and use it
+        with tempfile.NamedTemporaryFile(delete=False, suffix='.png') as tmp_file_flat_obverse:
+            flat_obverse_image = Image.fromarray(self.flatObverse)
+            flat_obverse_image.save(tmp_file_flat_obverse.name, 'PNG')
+            tmp_file_flat_obverse.close()  # Close the file for FPDF to access
+            self.image(tmp_file_flat_obverse.name, w=80, h=80)
 
         self.rect(110.0, 40.0, 80.0, 80.0, 'D')
         self.set_xy(110.0, 40.0)
-        self.image(Image.fromarray(self.flatReverse), w=80, h=80)
+        # Save flatReverse image to a temporary file and use it
+        with tempfile.NamedTemporaryFile(delete=False, suffix='.png') as tmp_file_flat_reverse:
+            flat_reverse_image = Image.fromarray(self.flatReverse)
+            flat_reverse_image.save(tmp_file_flat_reverse.name, 'PNG')
+            tmp_file_flat_reverse.close()  # Close the file for FPDF to access
+            self.image(tmp_file_flat_reverse.name, w=80, h=80)
 
         # Red/Orange mask
         self.rect(20.0, 150.0, 80.0, 80.0, 'D')
         self.set_xy(20.0, 150.0)
-        self.image(Image.fromarray(self.condMasks["highSigObverse"]), w=80, h=80)
+        # Save highSigObverse image to a temporary file and use it
+        with tempfile.NamedTemporaryFile(delete=False, suffix='.png') as tmp_file_high_sig_obverse:
+            high_sig_obverse_image = Image.fromarray(self.condMasks["highSigObverse"])
+            high_sig_obverse_image.save(tmp_file_high_sig_obverse.name, 'PNG')
+            tmp_file_high_sig_obverse.close()  # Close the file for FPDF to access
+            self.image(tmp_file_high_sig_obverse.name, w=80, h=80)
 
         self.rect(110.0, 150.0, 80.0, 80.0, 'D')
         self.set_xy(110.0, 150.0)
-        self.image(Image.fromarray(self.condMasks["highSigReverse"]), w=80, h=80)
+        # Save highSigReverse image to a temporary file and use it
+        with tempfile.NamedTemporaryFile(delete=False, suffix='.png') as tmp_file_high_sig_reverse:
+            high_sig_reverse_image = Image.fromarray(self.condMasks["highSigReverse"])
+            high_sig_reverse_image.save(tmp_file_high_sig_reverse.name, 'PNG')
+            tmp_file_high_sig_reverse.close()  # Close the file for FPDF to access
+            self.image(tmp_file_high_sig_reverse.name, w=80, h=80)
 
     def genTextPageThree(self):
         # Sub-Title: "Low Significance Details"
@@ -120,20 +159,40 @@ class PDF(FPDF):
         # Yellow mask
         self.rect(20.0, 40.0, 80.0, 80.0, 'D')
         self.set_xy(20.0, 40.0)
-        self.image(Image.fromarray(self.condMasks["lowSigObverse"]), w=80, h=80)
+        # Save lowSigObverse image to a temporary file and use it
+        with tempfile.NamedTemporaryFile(delete=False, suffix='.png') as tmp_file_low_sig_obverse:
+            low_sig_obverse_image = Image.fromarray(self.condMasks["lowSigObverse"])
+            low_sig_obverse_image.save(tmp_file_low_sig_obverse.name, 'PNG')
+            tmp_file_low_sig_obverse.close()  # Close the file for FPDF to access
+            self.image(tmp_file_low_sig_obverse.name, w=80, h=80)
 
         self.rect(110.0, 40.0, 80.0, 80.0, 'D')
         self.set_xy(110.0, 40.0)
-        self.image(Image.fromarray(self.condMasks["lowSigReverse"]), w=80, h=80)
+        # Save lowSigReverse image to a temporary file and use it
+        with tempfile.NamedTemporaryFile(delete=False, suffix='.png') as tmp_file_low_sig_reverse:
+            low_sig_reverse_image = Image.fromarray(self.condMasks["lowSigReverse"])
+            low_sig_reverse_image.save(tmp_file_low_sig_reverse.name, 'PNG')
+            tmp_file_low_sig_reverse.close()  # Close the file for FPDF to access
+            self.image(tmp_file_low_sig_reverse.name, w=80, h=80)
 
         # Green mask
         self.rect(20.0, 150.0, 80.0, 80.0, 'D')
         self.set_xy(20.0, 150.0)
-        self.image(Image.fromarray(self.condMasks["rimObverse"]), w=80, h=80)
+        # Save rimObverse image to a temporary file and use it
+        with tempfile.NamedTemporaryFile(delete=False, suffix='.png') as tmp_file_rim_obverse:
+            rim_obverse_image = Image.fromarray(self.condMasks["rimObverse"])
+            rim_obverse_image.save(tmp_file_rim_obverse.name, 'PNG')
+            tmp_file_rim_obverse.close()  # Close the file for FPDF to access
+            self.image(tmp_file_rim_obverse.name, w=80, h=80)
 
         self.rect(110.0, 150.0, 80.0, 80.0, 'D')
         self.set_xy(110.0, 150.0)
-        self.image(Image.fromarray(self.condMasks["rimReverse"]), w=80, h=80)
+        # Save rimReverse image to a temporary file and use it
+        with tempfile.NamedTemporaryFile(delete=False, suffix='.png') as tmp_file_rim_reverse:
+            rim_reverse_image = Image.fromarray(self.condMasks["rimReverse"])
+            rim_reverse_image.save(tmp_file_rim_reverse.name, 'PNG')
+            tmp_file_rim_reverse.close()  # Close the file for FPDF to access
+            self.image(tmp_file_rim_reverse.name, w=80, h=80)
 
     def genTextPageFour(self):
         # Sub-Title: "Brightness"
@@ -156,8 +215,12 @@ class PDF(FPDF):
         self.set_font('Arial', '', 12)
         self.multi_cell(w=210.0, h=5.0, align='L', txt=desc, border=0)
 
-        self.set_xy(55.0, 55.0)
-        self.image(Image.fromarray(self.histBrillliance), w=110, h=70)
+        with tempfile.NamedTemporaryFile(delete=False, suffix='.png') as tmp_file_hist_brilliance:
+            hist_brilliance_image = Image.fromarray(self.histBrillliance)
+            hist_brilliance_image.save(tmp_file_hist_brilliance.name, 'PNG')
+            tmp_file_hist_brilliance.close()  # Close the file for FPDF to access
+            self.set_xy(55.0, 55.0)
+            self.image(tmp_file_hist_brilliance.name, w=110, h=70)
 
         # Sub-Title: "Toning Coverage"
         self.set_xy(20.0, 110.0)
@@ -180,11 +243,20 @@ class PDF(FPDF):
         self.set_font('Arial', '', 12)
         self.multi_cell(w=210.0, h=5.0, align='L', txt=desc, border=0)
 
-        self.set_xy(20.0, 180.0)
-        self.image(Image.fromarray(self.obToningCovImgDR), w=80, h=80)
+        with tempfile.NamedTemporaryFile(delete=False, suffix='.png') as tmp_file_ob_toning_cov:
+            ob_toning_cov_image = Image.fromarray(self.obToningCovImgDR)
+            ob_toning_cov_image.save(tmp_file_ob_toning_cov.name, 'PNG')
+            tmp_file_ob_toning_cov.close()  # Close the file for FPDF to access
+            self.set_xy(20.0, 180.0)
+            self.image(tmp_file_ob_toning_cov.name, w=80, h=80)
 
-        self.set_xy(110.0, 180.0)
-        self.image(Image.fromarray(self.reToningCovImgDR), w=80, h=80)
+        with tempfile.NamedTemporaryFile(delete=False, suffix='.png') as tmp_file_re_toning_cov:
+            re_toning_cov_image = Image.fromarray(self.reToningCovImgDR)
+            re_toning_cov_image.save(tmp_file_re_toning_cov.name, 'PNG')
+            tmp_file_re_toning_cov.close()  # Close the file for FPDF to access
+            self.set_xy(110.0, 180.0)
+            self.image(tmp_file_re_toning_cov.name, w=80, h=80)
+
     def genImagesPageFour(self):
         # Brightness Histogram
         # TODO: Add histogram image or import from module which develops it
