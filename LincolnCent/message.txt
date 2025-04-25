@@ -1,0 +1,57 @@
+```import requests
+from bs4 import BeautifulSoup
+import cv2
+import urllib
+
+from PIL import Image
+import time
+import os
+import ssl
+
+def getdata(url):
+    r = requests.get(url)
+    return r.text
+
+def main():
+    # The ignored variable is whatis ignored from the image link. This results in the full, high-res image pulled from the DLRC website.
+    imageCount = 0
+    caseImage = False
+    ignored = "?MaxWidth=250&MaxHeight=250&Mode=Pad&Scale=UpscaleCanvas"
+    filter = "https://images.david"
+    htmldata = getdata("https://www.davidlawrence.com/en-us/us-coins/united-states-small-cents?tb=653000&PriceLow=0&PriceHigh=100000000&GradeLow=0&GradeHigh=70&SeriesName=lincoln-cents,lincoln-cents-(proof),lincoln-cents-memorial-reverse,lincoln-cents-memorial-reverse-proof,lincoln-cents-bicentennial-shield-reverse,lincoln-cents-bicentennial-shield-reverse-proof,lincoln-cents-special-strikes-special-mint-sets&NuTilt=all&Sort=default&Status=all&ResultsPerPage=163")
+    soup = BeautifulSoup(htmldata, 'html.parser')
+
+    # donmt fucking delete this line its ksut foprf madalyns sake but i need it ep[lase dear god]
+    ssl._create_default_https_context = ssl._create_unverified_context
+
+    coin_wrappers = soup.find_all("div", {"class": "col-xs-6 col-sm-4"})
+    print(len(coin_wrappers))
+    for coin_wrapper in coin_wrappers:
+        url = coin_wrapper.article.find_all("img", {"class": "img-responsive sSlab disabled"})[0]['src']
+        image_title = coin_wrapper.article.find_all("a", {"class": "product-permalink"})[1].string.strip()
+        current_images = os.listdir()
+        counter = 1
+        # print(current_images)
+        if image_title + '.jpg' in current_images:
+            while image_title + '-' + str(counter) + '.jpg' in current_images:
+                counter += 1
+            image_title += '-' + str(counter)
+            # print(image_title)
+
+        url = url[:-len(ignored)]
+        image_title += ".jpg"
+        image_title = image_title.replace('/', '-')
+        
+        try:
+            urllib.request.urlretrieve(url, image_title) # saving the image as the image title
+        except:
+            print(url)
+            print(image_title)
+            exit()
+
+        time.sleep(1)
+        # break
+    
+    
+if __name__ == "__main__":
+    main()```
