@@ -86,7 +86,9 @@ def preprocess_coin_image_cv2(image, pad_frac=0.05):
 
 
 if __name__ == '__main__':
-    # load original
+    # this is the image I'm using for local testing, change this to test other images
+    
+    
     orig_bgr = cv2.imread('LincolnCent/CentPhone.jpg')
     if orig_bgr is None:
         print("Error: CentPhone.jpg not found")
