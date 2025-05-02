@@ -11,9 +11,8 @@ Date: 11 Mar 23
 
 import numpy as np
 import os
-from CoinImage import CoinImage
-import ToningMacros as Macros
-import cv2
+from .CoinImage import CoinImage
+from . import ToningMacros as Macros
 
 colorPaletteNames = {'Light Gold': 0,
                      'Medium Gold': 0,

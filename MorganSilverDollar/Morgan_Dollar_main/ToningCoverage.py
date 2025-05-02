@@ -13,10 +13,7 @@ import cv2 as cv2
 import os
 import numpy as np
 import matplotlib.pyplot as plt
-import hsvMorganGTAEQs as eq
-from PIL import Image
-from time import perf_counter
-import ToningMacros
+from . import hsvMorganGTAEQs as eq
 
 
 # This will just print out to the console the degree of toning

@@ -19,10 +19,10 @@ Author: Zymmorrah Myers and Matthew Donlon
 Date: 12 Mar 2023
 """
 import sys
-from Brilliance import getBrilliance_And_Percent_Silver
-from ToningCoverage import getToningCoverage
-from colorPalette import find_colors
-from CoinImage import CoinImage
+from .Brilliance import getBrilliance_And_Percent_Silver
+from .ToningCoverage import getToningCoverage
+from .colorPalette import find_colors
+from .CoinImage import CoinImage
 import os
 
 def getToningScore(coin):

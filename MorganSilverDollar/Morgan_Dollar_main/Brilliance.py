@@ -23,8 +23,8 @@ Author: Zymmorrah Myers
 Date: 12 Mar 2023
 """
 import cv2
-from ImageHSV import statistics
-from CoinImage import CoinImage
+from .ImageHSV import statistics
+from .CoinImage import CoinImage
 import os
 import numpy as np
 import pandas as pd
@@ -199,7 +199,7 @@ def getBrilliance_And_Percent_Silver(coin):
 
 def getBrillianceHist():
     "Only ussing obverse image because the graphs for both reverse and obverse are the same"
-    d = pd.read_csv("image_database.csv", usecols=['Brilliance Obverse'])
+    d = pd.read_csv("MorganSilverDollar/Morgan_Dollar_main/image_database.csv", usecols=['Brilliance Obverse'])
     d.hist(bins = 20)
     plt.xlim([1, 10])
     plt.ylim([0, 4000])
@@ -207,8 +207,8 @@ def getBrillianceHist():
     plt.xlabel("Brilliance Scores (1 - 10)")
     plt.ylabel("Number of Coins")
     histPlot = plt.figure(1)
-    histPlot.savefig('BrillianceHist.jpg')
-    img = Image.open('BrillianceHist.jpg')
+    histPlot.savefig('MorganSilverDollar/Morgan_Dollar_main/BrillianceHist.jpg')
+    img = Image.open('MorganSilverDollar/Morgan_Dollar_main/BrillianceHist.jpg')
     Hist = np.array(img)
 
     return Hist

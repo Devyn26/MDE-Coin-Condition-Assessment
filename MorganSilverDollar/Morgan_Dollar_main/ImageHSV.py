@@ -7,7 +7,7 @@ import cv2
 
 import numpy
 
-import ImageOpener
+from . import ImageOpener
 import numpy as np
 import statistics
 import math
@@ -17,7 +17,7 @@ from sklearn.decomposition import PCA
 from sklearn.preprocessing import StandardScaler
 from sklearn.model_selection import train_test_split
 from sklearn.neighbors import KNeighborsClassifier
-from buildDatabase import compileHSVData
+from .buildDatabase import compileHSVData
 
 
 class KNearestNeighbor(object):

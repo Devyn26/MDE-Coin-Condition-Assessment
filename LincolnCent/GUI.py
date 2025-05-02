@@ -10,10 +10,10 @@ from PyQt5.QtWidgets import *
 from PyQt5.QtGui import QPixmap  #pixmap is for image showing
 from PyQt5 import QtCore
 from PyQt5.QtCore import pyqtSlot
-import ImageHSV 
-import patternMatching
-import WheatStalkGrader
-import MorganGrader
+from . import ImageHSV 
+from . import patternMatching
+from . import WheatStalkGrader
+from . import MorganGrader
 
 
 obversePath = ""
@@ -184,7 +184,9 @@ class App(QWidget):
 
     @pyqtSlot()
     def on_obverse_click(self):
-        obverse_fileName = self.openFileNameDialog_obverse()
+        # obverse_fileName = self.openFileNameDialog_obverse()
+        # Demo Code, use above when running normally
+        obverse_fileName = 'test_images/Lincoln_obv_img_proc.jpg'
         print('Obverse button has been clicked with filepath name: ', obverse_fileName)
         self.upload_path_obverse.setText(obverse_fileName)
         pixmap_obverse = QPixmap(obverse_fileName)
@@ -205,7 +207,9 @@ class App(QWidget):
 
     @pyqtSlot()
     def on_reverse_click(self):
-        reverse_fileName = self.openFileNameDialog_reverse()
+        # reverse_fileName = self.openFileNameDialog_reverse()
+        # Demo Code, use above when running normally
+        reverse_fileName = 'test_images/Lincoln_rev_img_proc.jpg'
         print('Reverse button has been clicked with filepath name: ', reverse_fileName)
         self.upload_path_reverse.setText(reverse_fileName)
         pixmap_reverse = QPixmap(reverse_fileName)
@@ -324,6 +328,14 @@ class App(QWidget):
         self.result_box.append("\n")
         self.result_box.append("Feature Match Results: " + str(FeatureMatch_Results))
         self.result_box.append("\n")
+
+def runLWCCode():
+    print("\nRunning LWC Grader")
+    app = QApplication(sys.argv)
+    ex = App()
+    sys.exit(app.exec_())
+
+
 if __name__=='__main__':
     print("Hello world")
     app = QApplication(sys.argv)

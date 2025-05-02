@@ -7,25 +7,19 @@ Classifier or Regressor
 Author: Jasper Emick, Lizzie LaVallee
 Date: 10 Mar 2023
 """
-import sys
 import numpy as np
-import cv2
 # import tensorflow as tf
 import pandas as pd
 from matplotlib import pyplot as plt
 from sklearn.exceptions import NotFittedError
 
-from plotConditionData import scatterPlot
+from .plotConditionData import scatterPlot
 import pickle
 
-from sklearn.preprocessing import OneHotEncoder
-from sklearn.preprocessing import LabelEncoder
 from sklearn.preprocessing import StandardScaler
 from sklearn.neural_network import MLPRegressor
 # from sklearn.neural_network import MLPClassifier
-from sklearn.linear_model import SGDRegressor
 
-from sklearn.compose import ColumnTransformer
 from sklearn.model_selection import train_test_split
 
 # Good seeds: 10, 30, 40, 200, 370, 620
@@ -35,7 +29,7 @@ SEED_SPLIT = 200
 
 class Grader:
     def __init__(self):
-        self.database = "image_database.csv"
+        self.database = "MorganSilverDollar/Morgan_Dollar_main/image_database.csv"
         self.model = MLPRegressor(solver='adam',
                                   random_state=SEED_REG,
                                   hidden_layer_sizes=(8, 6),
@@ -65,10 +59,10 @@ class Grader:
     def TrainModel(self):
         self.model.fit(self.processedData['TrainingData'], self.processedData['TrainingLabels'])
 
-    def SaveModel(self, filename='model.sav'):
+    def SaveModel(self, filename='MorganSilverDollar/Morgan_Dollar_main/model.sav'):
         pickle.dump(self.model, open(filename, 'wb'))
 
-    def LoadModel(self, filename='model.sav'):
+    def LoadModel(self, filename='MorganSilverDollar/Morgan_Dollar_main/model.sav'):
         self.model = pickle.load(open(filename, 'rb'))
 
     def PredictGrade(self, inputCoin):
@@ -84,7 +78,7 @@ class Grader:
 
 
 def PreProcessing_Testing():
-    df = pd.read_csv("image_database.csv")
+    df = pd.read_csv("MorganSilverDollar/Morgan_Dollar_main/image_database.csv")
 
     # Standard Database
     X = df[[

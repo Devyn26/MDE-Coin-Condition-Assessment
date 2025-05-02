@@ -16,10 +16,10 @@ import numpy as np
 import pandas as pd
 import os
 
-from CoinImage import CoinImage
-from MaskImage import MaskImage
-import EdgeEval
-from buildDatabase import compileConditionData
+from .CoinImage import CoinImage
+from .MaskImage import MaskImage
+from . import EdgeEval
+from .buildDatabase import compileConditionData
 
 
 def process_one_image(coinimg, wedges):

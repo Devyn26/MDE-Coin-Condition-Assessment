@@ -20,7 +20,7 @@ Date: 3/05/2025
 import cv2
 import math
 import numpy as np
-from MaskImage import MaskImage
+from .MaskImage import MaskImage
 
 
 class CoinImage:

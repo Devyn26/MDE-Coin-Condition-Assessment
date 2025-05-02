@@ -4,7 +4,7 @@ Updated by: Eric Morley
 Date: 4/25/2025
 '''
 
-from ImageOpener import loadImages
+from .ImageOpener import loadImages
 import matplotlib.pyplot as plt
 import numpy as np
 import os

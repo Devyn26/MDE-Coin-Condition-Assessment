@@ -308,7 +308,7 @@ def generateTemplate(pdf):
     pdf.genTextPageFive()
     #pdf.genImagesPageFive()
 
-    pdf.output('test.pdf')
+    pdf.output('MorganSilverDollar/Morgan_Dollar_main/test.pdf')
 
 
 if __name__ == "__main__":

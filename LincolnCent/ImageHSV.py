@@ -10,7 +10,7 @@ import numpy as np
 import statistics
 import math
 import matplotlib.pyplot as plt
-from GUI import *
+from .GUI import *
 
 # Find the Path of an Image
 def findImagePath():

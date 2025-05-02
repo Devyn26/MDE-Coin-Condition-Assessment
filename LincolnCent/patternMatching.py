@@ -4,12 +4,12 @@ Updated by: Eric Morley
 Date: 4/25/2025
 '''
 
-from ImageOpener import loadImages
-from ImageAdjuster import gaussian
+from .ImageOpener import loadImages
+from .ImageAdjuster import gaussian
 import numpy as np
 import matplotlib.pyplot as plt
 import cv2
-import ImageHSV
+from . import ImageHSV
 
 def patternMatch(img, template, inpaint):
 
@@ -198,6 +198,7 @@ def generatePredictionFunctions():
 def imgIsMSD(path):
 
     percentage = ImageHSV.Image_HSV_Region1(path)
+    return False
     if percentage < 3:
         return True
     return False

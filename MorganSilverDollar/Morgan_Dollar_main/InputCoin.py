@@ -18,16 +18,16 @@ F25-06:
 import numpy as np
 import os
 
-import hsvMorganGTAEQs as eq
-from CoinImage import CoinImage
-from ConditionFeaturesEval import process_one_image_custom_mask, getConditionImage
-from ToningProcessing import getToningScore
-from ToningCoverage import getToningCoverageImage
-from ToningCoverage import calcToningCoverage
-from ConditionImperfectionEval import process_imperfection_image
-from Brilliance import getBrilliance_And_Percent_Silver, getBrillianceHist
-from MorganGrader import Grader
-from DetailedResults import PDF, generateTemplate
+from . import hsvMorganGTAEQs as eq
+from .CoinImage import CoinImage
+from .ConditionFeaturesEval import process_one_image_custom_mask, getConditionImage
+from .ToningProcessing import getToningScore
+from .ToningCoverage import getToningCoverageImage
+from .ToningCoverage import calcToningCoverage
+from .ConditionImperfectionEval import process_imperfection_image
+from .Brilliance import getBrilliance_And_Percent_Silver, getBrillianceHist
+from .MorganGrader import Grader
+from .DetailedResults import PDF, generateTemplate
 
 import cv2
 from PIL import Image
@@ -99,14 +99,14 @@ class inputCoin:
         """
         self.obverseFeatures = []
         self.reverseFeatures = []
-        obv_flat = os.path.abspath('CustomMasks/') + '\\' + 'obv_flat.jpg'
-        rev_flat = os.path.abspath('CustomMasks/') + '\\' + 'rev_flat.jpg'
-        obv_redorange = os.path.abspath('CustomMasks/') + '\\' + 'obv_red_orange_mask.jpg'
-        rev_redorange = os.path.abspath('CustomMasks/') + '\\' + 'rev_red_orange_mask.jpg'
-        obv_yellow = os.path.abspath('CustomMasks/') + '\\' + 'obv_yellow_mask.jpg'
-        rev_yellow = os.path.abspath('CustomMasks/') + '\\' + 'rev_yellow_mask.jpg'
-        obv_green = os.path.abspath('CustomMasks/') + '\\' + 'obv_green_mask.jpg'
-        rev_green = os.path.abspath('CustomMasks/') + '\\' + 'rev_green_mask.jpg'
+        obv_flat = os.path.abspath('MorganSilverDollar/Morgan_Dollar_main/CustomMasks/') + '\\' + 'obv_flat.jpg'
+        rev_flat = os.path.abspath('MorganSilverDollar/Morgan_Dollar_main/CustomMasks/') + '\\' + 'rev_flat.jpg'
+        obv_redorange = os.path.abspath('MorganSilverDollar/Morgan_Dollar_main/CustomMasks/') + '\\' + 'obv_red_orange_mask.jpg'
+        rev_redorange = os.path.abspath('MorganSilverDollar/Morgan_Dollar_main/CustomMasks/') + '\\' + 'rev_red_orange_mask.jpg'
+        obv_yellow = os.path.abspath('MorganSilverDollar/Morgan_Dollar_main/CustomMasks/') + '\\' + 'obv_yellow_mask.jpg'
+        rev_yellow = os.path.abspath('MorganSilverDollar/Morgan_Dollar_main/CustomMasks/') + '\\' + 'rev_yellow_mask.jpg'
+        obv_green = os.path.abspath('MorganSilverDollar/Morgan_Dollar_main/CustomMasks/') + '\\' + 'obv_green_mask.jpg'
+        rev_green = os.path.abspath('MorganSilverDollar/Morgan_Dollar_main/CustomMasks/') + '\\' + 'rev_green_mask.jpg'
 
         # do the imperfection analysis with the flat mask
         flatObv = process_imperfection_image(coin=self.obverseCoin, mask=obv_flat)
@@ -194,15 +194,27 @@ class inputCoin:
     def generateDetailedResults(self):
         generateTemplate(self.detailedResults)
 
+def runMSDCode(oImg, rImg):
+    c = inputCoin()
+    oImg = cv2.cvtColor(oImg, cv2.COLOR_BGR2RGB)
+    rImg = cv2.cvtColor(rImg, cv2.COLOR_BGR2RGB)
+
+    c.coinInitialize(oImg, rImg)
+    c.getConditionScore()
+    c.getToningScore()
+    c.getColorScore()
+    c.predictGrade()
+    c.generateDetailedResults()
+
 if __name__ == '__main__':
 
     # TEST PDF
     c = inputCoin()
-    oPath = os.path.abspath('ScrapedImages/obverse') + '\\'
-    oImg = cv2.imread(oPath + "Morgan 1880-CC PCGS MS63 2432444 obverse.jpg")
+    oPath = os.path.abspath('MorganSilverDollar/Morgan_Dollar_main/images') + '\\'
+    oImg = cv2.imread(oPath + "MSD_Proc_ob.jpg")
     oImg = cv2.cvtColor(oImg, cv2.COLOR_BGR2RGB)
-    rPath = os.path.abspath('ScrapedImages/reverse') + '\\'
-    rImg = cv2.imread(rPath + "Morgan 1880-CC PCGS MS63 2432444 reverse.jpg")
+    rPath = os.path.abspath('MorganSilverDollar/Morgan_Dollar_main/images') + '\\'
+    rImg = cv2.imread(rPath + "MSD_Proc_rev.jpg")
     rImg = cv2.cvtColor(rImg, cv2.COLOR_BGR2RGB)
 
     c.coinInitialize(oImg, rImg)

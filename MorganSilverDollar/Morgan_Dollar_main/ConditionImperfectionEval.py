@@ -15,11 +15,10 @@ import pandas as pd
 import os
 import cv2
 
-from CoinImage import CoinImage
-from MaskImage import MaskImage
-from plotConditionData import scatterPlot
-import EdgeEval
-from buildDatabase import compileConditionData
+from .CoinImage import CoinImage
+from .MaskImage import MaskImage
+from . import EdgeEval
+from .buildDatabase import compileConditionData
 
 
 def process_imperfection_image(coin, mask):
