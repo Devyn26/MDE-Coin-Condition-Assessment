@@ -1,11 +1,11 @@
 
 from pickletools import uint8
-from ImageOpener import loadImages
-from ImageAdjuster import gaussian
+from .ImageOpener import loadImages
+# from .ImageAdjuster import gaussian
 import numpy as np
 import matplotlib.pyplot as plt
 import cv2
-import ImageHSV
+from . import ImageHSV
 import os
 
 
@@ -75,18 +75,18 @@ def getCorrelation(image, templates):
     # plt.imshow(image, cmap=plt.get_cmap('gray'))
     # plt.show()
 
-    imageBlur = gaussian(image)
+    imageBlur = cv2.GaussianBlur(image, (5, 5), 0)
 
     # plt.imshow(imageBlur, cmap=plt.get_cmap('gray'))
     # plt.show()
     
     for t in templates:
         #tAdjust = setSat(t, 50)
-        templateBlur = gaussian(t)
+        templateBlur = cv2.GaussianBlur(t, (5, 5), 0)
         res, maxVal, maxLoc = patternMatch(imageBlur, templateBlur, False)
         maxVals.append(maxVal)
         
-    return sum(maxVals) / len(maxVals)
+    return sum(maxVals)
 
 
 def setSat(img, sat):

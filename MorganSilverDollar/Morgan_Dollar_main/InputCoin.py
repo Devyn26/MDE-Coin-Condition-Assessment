@@ -28,6 +28,8 @@ from .ConditionImperfectionEval import process_imperfection_image
 from .Brilliance import getBrilliance_And_Percent_Silver, getBrillianceHist
 from .MorganGrader import Grader
 from .DetailedResults import PDF, generateTemplate
+from .patternMatching import getCorrelation
+from .ImageOpener import loadImages
 
 import cv2
 from PIL import Image
@@ -56,6 +58,8 @@ class inputCoin:
         self.brillianceHist = None
         self.obverseColors = []
         self.reverseColors = []
+
+        self.confidencescoring = None
 
         # Unused for now
         self.mintLocation = None  # String
@@ -194,7 +198,25 @@ class inputCoin:
     def generateDetailedResults(self):
         generateTemplate(self.detailedResults)
 
+    def confidenceScore(self):
+        #self.grader.LoadConfidenceModel()
+        # self.confidencescoring = self.grader.CalculateConfidence(np.array([self.obverseFeatures[0],
+        #                                                          self.reverseFeatures[0],
+        #                                                          self.obverseFeatures[1],
+        #                                                          self.reverseFeatures[1],
+        #                                                          self.obverseFeatures[2],
+        #                                                          self.reverseFeatures[2],
+        #                                                          self.obverseFeatures[3],
+        #                                                          self.reverseFeatures[3],
+        #                                                          self.obverseBrilliance,
+        #                                                          self.reverseBrilliance,
+        #                                                          self.reverseToning, 
+        #                                                          self.obverseToning]).reshape(1, -1))
+        self.confidencescoring = self.grader.CalculateConfidence(self.predictedGrade)
+        print("Confidence Score:", self.confidencescoring)
+
 def runMSDCode(oImg, rImg):
+    print("\nRunning MSD Grader")
     c = inputCoin()
     oImg = cv2.cvtColor(oImg, cv2.COLOR_BGR2RGB)
     rImg = cv2.cvtColor(rImg, cv2.COLOR_BGR2RGB)
@@ -205,6 +227,7 @@ def runMSDCode(oImg, rImg):
     c.getColorScore()
     c.predictGrade()
     c.generateDetailedResults()
+    c.confidenceScore()
 
 if __name__ == '__main__':
 

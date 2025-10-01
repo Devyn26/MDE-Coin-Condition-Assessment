@@ -279,6 +279,13 @@ class PDF(FPDF):
         self.set_font('Arial', '', 12)
         self.multi_cell(w=210.0, h=5.0, align='L', txt=desc, border=0)
 
+        # confidence score temp location
+        
+        confidence_score = "Confidence Score: " + str(((self.conditionScore + self.brillianceScore + self.toningScore)/90) * 100) + "%"
+        self.set_xy(20.0, 100.0)
+        self.set_font('Arial', '', 12)
+        self.multi_cell(w=210.0, h=5.0, align='L', txt=confidence_score, border=0)
+
     #def genImagesPageFive(self):
         # Toning Coverage Reverse
         #self.rect(20.0, 20.0, 80.0, 80.0, 'D')

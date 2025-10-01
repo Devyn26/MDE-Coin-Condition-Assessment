@@ -9,8 +9,8 @@ Date: 13 Feb 2023
 import numpy as np
 import os
 import cv2
-from CoinImage import CoinImage
-import EdgeEval
+from .CoinImage import CoinImage
+from . import EdgeEval
 from matplotlib import pyplot as plt
 
 

@@ -29,8 +29,8 @@ if __name__ == '__main__':
     cv2.imwrite('test_images/Lincoln_obv_img_proc.jpg', Lincoln_obv_img)
     cv2.imwrite('test_images/Lincoln_rev_img_proc.jpg', Lincoln_rev_img)
 
-    cv2.imwrite('test_images/MSD_obv_img_proc.jpg', Lincoln_obv_img)
-    cv2.imwrite('test_images/MSD_rev_img_proc.jpg', Lincoln_rev_img)
+    cv2.imwrite('test_images/MSD_obv_img_proc.jpg', MSD_obv_img)
+    cv2.imwrite('test_images/MSD_rev_img_proc.jpg', MSD_rev_img)
 
     # Morgan Silver Dollar Demo
     InputCoin.runMSDCode(MSD_obv_img, MSD_rev_img)
