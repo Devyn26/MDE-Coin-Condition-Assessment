@@ -175,6 +175,8 @@ class inputCoin:
                                             'Toning Reverse'
                                             ]))
         self.grader.LoadModel()
+        self.obverseToning = 0
+        self.reverseToning = 0
         self.predictedGrade = self.grader.PredictGrade(np.array([self.obverseFeatures[0],
                                                                  self.reverseFeatures[0],
                                                                  self.obverseFeatures[1],
@@ -188,6 +190,7 @@ class inputCoin:
                                                                  self.obverseToning,
                                                                  self.reverseToning
                                                                  ]).reshape(1, -1))  # reshaped when doing the testpdf, if it gives an error on the website just get rid of the reshape
+
         self.detailedResults.conditionScore = self.predictedGrade
         print(self.predictedGrade)
 
@@ -201,7 +204,7 @@ def runMSDCode(oImg, rImg):
 
     c.coinInitialize(oImg, rImg)
     c.getConditionScore()
-    c.getToningScore()
+    #c.getToningScore()
     c.getColorScore()
     c.predictGrade()
     c.generateDetailedResults()
@@ -210,13 +213,14 @@ if __name__ == '__main__':
 
     # TEST PDF
     c = inputCoin()
-    oPath = os.path.abspath('MorganSilverDollar/Morgan_Dollar_main/images') + '\\'
-    oImg = cv2.imread(oPath + "MSD_Proc_ob.jpg")
+    
+    oPath = os.path.abspath('test_images') + '\\'
+    oImg = cv2.imread(oPath + "Morgan 1878 ANACS MS60 2010020 obverse.jpg")
     oImg = cv2.cvtColor(oImg, cv2.COLOR_BGR2RGB)
-    rPath = os.path.abspath('MorganSilverDollar/Morgan_Dollar_main/images') + '\\'
-    rImg = cv2.imread(rPath + "MSD_Proc_rev.jpg")
+    rPath = os.path.abspath('test_images') + '\\'
+    rImg = cv2.imread(rPath + "Morgan 1878 ANACS MS60 2010020 reverse.jpg")
     rImg = cv2.cvtColor(rImg, cv2.COLOR_BGR2RGB)
-
+    1
     c.coinInitialize(oImg, rImg)
     c.getConditionScore()
     c.getToningScore()
