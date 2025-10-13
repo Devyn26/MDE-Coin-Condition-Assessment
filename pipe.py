@@ -329,7 +329,7 @@ def brightness_glare_check(img: np.ndarray, x: int, y: int, r: int) -> int:
     """
     bright_thresh = 215 # upper threshold for average coin brightness
     dark_thresh = 80 # lower threshold for average coin brightness
-    glare_thresh = 25 # threshold percentage for amount >= 250 pixels in coin
+    glare_thresh = 3 # threshold percentage for amount >= 250 pixels in coin
 
     gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
 
@@ -340,8 +340,8 @@ def brightness_glare_check(img: np.ndarray, x: int, y: int, r: int) -> int:
 
     # glare check setup
     coin_pixels = gray[coin_mask == 255]
-    glare_pct = np.sum(coin_pixels >= 250) / coin_pixels.size * 100
-    print(f"Glare pixels >= 250: {glare_pct:.2f}%")
+    glare_pct = np.sum(coin_pixels >= 255) / coin_pixels.size * 100
+    print(f"Glare pixels >= 255: {glare_pct:.2f}%")
 
     # check for coin being too bright/dark
     if (brightness > bright_thresh):
