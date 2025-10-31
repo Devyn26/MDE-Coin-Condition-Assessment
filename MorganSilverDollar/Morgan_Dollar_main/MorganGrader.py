@@ -35,9 +35,15 @@ class Grader:
         self.database = "MorganSilverDollar/Morgan_Dollar_main/image_database.csv"
         self.model = MLPRegressor(solver='adam',
                                   random_state=SEED_REG,
-                                  hidden_layer_sizes=(8, 6),
-                                  max_iter=1000,
-                                  activation='relu')
+                                  hidden_layer_sizes=(64, 32), #changed from (8,6) to (64,32)
+                                  max_iter=3000, #changed from 1k
+                                  alpha=1e-3, #new #barely hurts results, improves within 1 accuracy
+                                 # learning_rate_init=1e-3, #new
+                                 # early_stopping=True, #new
+                                 # validation_fraction=0.15, #new
+                                 # n_iter_no_change=50, #new
+                                  activation='relu'
+                                  )
         self.processedData = {}
         self.scaler = StandardScaler()
         self.confidence = MLPRegressor(solver='adam',
@@ -47,7 +53,7 @@ class Grader:
                                   activation='relu')
 
     def PreProcessing(self, features,
-                      label='Grade', test_size=0.05):
+                      label='Grade', test_size=0.15):
         """ Prepares data for the grading model to train and predict """
 
         df = pd.read_csv(self.database)
@@ -55,7 +61,13 @@ class Grader:
         y = df[label].values
         inventory = df[['Inventory #']]
 
-        X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=test_size, random_state=SEED_SPLIT)
+         # new index for test/training data split
+
+        idx = np.arange(len(df))
+
+        # added idx_train and idx_test and idx to train_test_split function call
+
+        X_train, X_test, y_train, y_test, idx_train, idx_test = train_test_split(X, y, idx, test_size=test_size, random_state=SEED_SPLIT)
 
         # Standard scale for optimization and to protect against
         sc = self.scaler
@@ -63,6 +75,22 @@ class Grader:
         X_test = sc.transform(X_test)
         self.processedData = {'TrainingData': X_train, 'TestingData': X_test, 'TrainingLabels': y_train,
                               'TestingLabels': y_test, 'Inventory': inventory}
+
+                # Save splits to CSV (new)
+
+        # Full rows from the original dataframe
+
+        df.iloc[idx_train].to_csv('train_split.csv', index=False)
+
+        df.iloc[idx_test].to_csv('test_split.csv', index=False)
+
+
+
+        # Just the inventory IDs
+
+        df.loc[idx_train, ['Inventory #']].to_csv('train_ids.csv', index=False)
+
+        df.loc[idx_test,  ['Inventory #']].to_csv('test_ids.csv',  index=False)
 
     def TrainModel(self):
         self.model.fit(self.processedData['TrainingData'], self.processedData['TrainingLabels'])
@@ -156,15 +184,15 @@ def PreProcessing_Testing():
         'EdgeFreq Green Obverse',
         'EdgeFreq Green Reverse',
         'Brilliance Obverse',
-        'Brilliance Reverse',
-        'Toning Obverse',
-        'Toning Reverse'
+        'Brilliance Reverse'
+        #'Toning Obverse',
+        #'Toning Reverse'
     ]].values
     inventory = df[['Inventory #']]
     y = df.iloc[:, 3].values
 
     # Splits data into training and testing sets
-    X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.05, random_state=SEED_SPLIT)
+    X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.15, random_state=SEED_SPLIT)
 
     # Standard scale for optimization and to protect against
     sc = StandardScaler()
@@ -208,59 +236,22 @@ def TheMachineIsLearning():
 
     # predictions[predictions < 55] = 55.0
     predictions[predictions > 70] = 70.0
-    print(predictions)
+    #print(predictions)
     differences = np.subtract(predictions, y_test)
     differences[differences > 10] = 10
     differences[differences < -10] = -10
-    print(differences)
+    #print(differences)
     print("+/-7:", np.sum(abs(differences) <= 7) / len(X_test))
     print("+/-5:", np.sum(abs(differences) <= 5) / len(X_test))
     print("+/-3:", np.sum(abs(differences) <= 3) / len(X_test))
     print("+/-1:", np.sum(abs(differences) <= 1) / len(X_test))
 
-    adjusted_predictions = np.zeros([len(X_test)])
-    for x in range(len(X_test)):
-        if (differences[x] > 0):
-            adjusted_predictions[x] = predictions[x] - (abs(differences[x]) * 2)
-        else:
-            adjusted_predictions[x] = predictions[x]
-
-    testPercents = np.divide(adjusted_predictions[adjusted_predictions > 0], y_test[y_test > 0])
-    slope, intercept, r_value, p_value, std_err = linregress(y_test, testPercents)
-
     #if np.sum(abs(differences) <= 1) / len(X_test) > 0.55:
-    this, that = train_test_split(inventory, test_size=0.05, random_state=SEED_SPLIT)
+    this, that = train_test_split(inventory, test_size=0.15, random_state=SEED_SPLIT)
 
     ran = np.arange(len(y_test), 0, -1)
     # scatterPlot(differences, ran, y_test, "Error Range for Test Coins",
     #              "Margin of Error (Predicted Grade - Original Grade)", np.transpose(np.array(that))[0])
-
-    # scatterPlot(y_test, testPercents, y_test, "Percent Accuracy of Coins",
-    #              "Actual Coin Grade", np.transpose(np.array(that))[0])
-    # print("Slope: ", slope)
-    # print("Intercept:", intercept)
-    # print("Standard Error: ", std_err)
-    # print("R^2 Value:", r_value * r_value)
-    # print("P Value:", p_value)
-
-    # plt.scatter(y_test, testPercents, color='blue', label='Data points')
-    # plt.plot(y_test, [slope * xi + intercept for xi in y_test], color='red', label=f'Best fit line: y = {slope:.2f}x + {intercept:.2f}')
-    # plt.legend()
-    # plt.show()
-
-    coefficients = np.polyfit(y_test, testPercents, 2)
-    quadratic_model = np.poly1d(coefficients)
-
-    # x_pred = np.linspace(min(y_test), max(y_test), 100)
-    # y_pred = quadratic_model(x_pred)
-    # print("Quadratic Equation: y = {:.2f}x^2 + {:.2f}x + {:.2f}".format(*coefficients))
-    # plt.scatter(y_test, testPercents, color='blue', label='Data Points')
-    # plt.plot(x_pred, y_pred, color='red', label='Quadratic Fit')
-    # plt.xlabel('X')
-    # plt.ylabel('Y')
-    # plt.title('Quadratic Regression')
-    # plt.legend()
-    # plt.show()
     # ANN.predict
 
 
@@ -277,9 +268,7 @@ if __name__ == '__main__':
                               'EdgeFreq Green Obverse',
                               'EdgeFreq Green Reverse',
                               'Brilliance Obverse',
-                              'Brilliance Reverse',
-                              'Toning Obverse',
-                              'Toning Reverse'
+                              'Brilliance Reverse'
                               ])
     g.TrainModel()
     g.SaveModel()

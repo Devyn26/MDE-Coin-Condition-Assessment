@@ -170,9 +170,7 @@ class inputCoin:
                                             'EdgeFreq Green Obverse',
                                             'EdgeFreq Green Reverse',
                                             'Brilliance Obverse',
-                                            'Brilliance Reverse',
-                                            'Toning Obverse',
-                                            'Toning Reverse'
+                                            'Brilliance Reverse'
                                             ]))
         self.grader.LoadModel()
         self.obverseToning = 0
@@ -186,9 +184,7 @@ class inputCoin:
                                                                  self.obverseFeatures[3],
                                                                  self.reverseFeatures[3],
                                                                  self.obverseBrilliance,
-                                                                 self.reverseBrilliance,
-                                                                 self.obverseToning,
-                                                                 self.reverseToning
+                                                                 self.reverseBrilliance
                                                                  ]).reshape(1, -1))  # reshaped when doing the testpdf, if it gives an error on the website just get rid of the reshape
 
         self.detailedResults.conditionScore = self.predictedGrade
