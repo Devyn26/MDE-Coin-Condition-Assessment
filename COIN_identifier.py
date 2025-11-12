@@ -15,6 +15,8 @@ def identify_coin_type(coin_image, face_type):
     lwc_mask = load_lwc_reference_mask(face_type)
     lwc_score = 0.0
     lwc_angle = 0.0
+    lwc_scores = []
+    lwc_angles = []
     if lwc_mask is not None:
         lwc_angle, lwc_score, lwc_scores, lwc_angles = find_optimal_rotation(coin_image, lwc_mask, face_type, angle_range=360, step=1.0)
         print(f"LWC {face_type}: angle={lwc_angle:.1f} deg, correlation={lwc_score:.4f}")
@@ -27,6 +29,8 @@ def identify_coin_type(coin_image, face_type):
     msd_mask = load_msd_reference_mask(face_type)
     msd_score = 0.0
     msd_angle = 0.0
+    msd_scores = []
+    msd_angles = []
     if msd_mask is not None:
         msd_angle, msd_score, msd_scores, msd_angles = find_optimal_rotation(coin_image, msd_mask, face_type, angle_range=360, step=1.0)
         print(f"MSD {face_type}: angle={msd_angle:.1f} deg, correlation={msd_score:.4f}")
@@ -87,8 +91,8 @@ def identify_coin_type(coin_image, face_type):
         best_angle = msd_angle
         print("Identification by steepness score: MSD wins")
     else:
-        # perfect tie: fall back to lower raw score
-        if lwc_score < msd_score:
+        # perfect tie: fall back to higher raw correlation score
+        if lwc_score > msd_score:
             coin_type = "LWC"; best_score = lwc_score; best_angle = lwc_angle
             print("Tie on steepness score; raw score tie-breaker -> LWC")
         else:
@@ -175,7 +179,7 @@ def identify_coin_type_metrics(coin_image, face_type):
     elif msd_score_metric > lwc_score_metric:
         coin_type = "MSD"; best_score = msd_score; best_angle = msd_angle
     else:
-        if lwc_score < msd_score:
+        if lwc_score > msd_score:
             coin_type = "LWC"; best_score = lwc_score; best_angle = lwc_angle
         else:
             coin_type = "MSD"; best_score = msd_score; best_angle = msd_angle

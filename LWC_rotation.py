@@ -63,7 +63,9 @@ def load_lwc_reference_mask(face_type):
     if mask is None:
         print(f"Could not load LWC mask for {face_type}")
         return None
-    print(f"Loaded LWC {face_type} reference mask: {mask.shape}")
+    # Invert mask per updated requirement
+    mask = cv2.bitwise_not(mask)
+    print(f"Loaded LWC {face_type} reference mask (inverted): {mask.shape}")
     return mask
 
 
@@ -106,7 +108,7 @@ def find_optimal_rotation(coin_image, reference_mask, face_type, angle_range=180
         min_val, max_val, min_loc, max_loc = cv2.minMaxLoc(result)
         correlation_score = max_val
 
-        if correlation_score < best_coarse_score or best_coarse_score == -1:
+        if correlation_score > best_coarse_score or best_coarse_score == -1:
             best_coarse_score = correlation_score
             best_coarse_angle = angle
         coarse_scores.append(correlation_score)
@@ -133,11 +135,11 @@ def find_optimal_rotation(coin_image, reference_mask, face_type, angle_range=180
         scores.append(correlation_score)
         angles.append(angle)
 
-        if correlation_score < best_score or best_score == -1:
+        if correlation_score > best_score or best_score == -1:
             best_score = correlation_score
             best_angle = angle
 
-    print(f"Best rotation: {best_angle:.1f}° (min correlation: {best_score:.4f})")
+    print(f"Best rotation: {best_angle:.1f}° (max correlation: {best_score:.4f})")
 
     # Prepend coarse to provide full horizontal range in downstream plots
     if len(coarse_angles_list) > 0:
