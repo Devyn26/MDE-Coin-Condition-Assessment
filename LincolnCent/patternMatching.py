@@ -3,15 +3,20 @@ Updated for F25-06 coin assessment team
 Updated by: Eric Morley
 Date: 4/25/2025
 '''
-
+from functools import lru_cache
 from .ImageOpener import loadImages
 from .ImageAdjuster import gaussian
 import numpy as np
 import matplotlib.pyplot as plt
 import cv2
 from . import ImageHSV
+import time
 
-def patternMatch(img, template, inpaint):
+def _now():
+    return time.perf_counter()
+
+
+def patternMatch(img, template, inpaint): # MORLEY
 
     if inpaint:
         mask1 = cv2.threshold(img, 200, 255, cv2.THRESH_BINARY)[1]
@@ -20,6 +25,18 @@ def patternMatch(img, template, inpaint):
         mask2 = cv2.threshold(template, 200, 255, cv2.THRESH_BINARY)[1]
         template = cv2.inpaint(template, mask2, 0.1, cv2.INPAINT_TELEA)
 
+    # Ensure both are valid
+    if img is None or template is None:
+        raise ValueError("patternMatch: One of the images is None.")
+    if img.ndim == 3:
+        img = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
+    if template.ndim == 3:
+        template = cv2.cvtColor(template, cv2.COLOR_BGR2GRAY)
+
+    # Convert to same dtype
+    img = img.astype(np.float32)
+    template = template.astype(np.float32)
+
     res = cv2.matchTemplate(img, template, cv2.TM_CCOEFF_NORMED)
 
     # plt.imshow(cv2.normalize(res, None))
@@ -27,7 +44,23 @@ def patternMatch(img, template, inpaint):
     minVal, maxVal, minLoc, maxLoc = cv2.minMaxLoc(res)
     return res, maxVal, maxLoc
 
-####################################DEPRICATED###########################################
+@lru_cache(maxsize=None)
+def _get_templates_blurred(dirpath: str):
+    t0 = _now()
+    print(f"[DEBUG] [Templates] Loading from: {dirpath}")
+    tpls = loadImages('grey', dirpath)
+    t1 = _now()
+    print(f"[DEBUG] [Templates] Loaded {len(tpls)} template(s) in {t1 - t0:.3f}s")
+
+    tb0 = _now()
+    tpls_blurred = tuple(gaussian(t) for t in tpls)
+    tb1 = _now()
+    print(f"[DEBUG] [Templates] Blurred {len(tpls_blurred)} template(s) in {tb1 - tb0:.3f}s")
+    print(f"[DEBUG] [Templates] Total cache build time: {tb1 - t0:.3f}s")
+    return tpls_blurred
+
+
+
 def shapeFromShading(img, light):
 
     lightN = np.zeros(light.shape)
@@ -67,26 +100,41 @@ def shapeFromShading(img, light):
             Z[i,j] = (np.sum(q[:i,0]) + np.sum(p[i,:j]))
 
     return Z
-##################################################################################################
 
 def getCorrelation(image, templates):
-    maxVals = []
+    """
+    Compute avg(max NCC) over a bank of templates.
+    Assumes `templates` are already pre-blurred via _get_templates_blurred.
+    """
+    total0 = _now()
 
-    # plt.imshow(image, cmap=plt.get_cmap('gray'))
-    # plt.show()
 
+    b0 = _now()
     imageBlur = gaussian(image)
+    b1 = _now()
+    print(f"[DEBUG] [Match] Input blur: {(b1 - b0):.3f}s | image shape={image.shape}")
 
-    # plt.imshow(imageBlur, cmap=plt.get_cmap('gray'))
-    # plt.show()
-    
-    for t in templates:
-        #tAdjust = setSat(t, 50)
-        templateBlur = gaussian(t)
-        res, maxVal, maxLoc = patternMatch(imageBlur, templateBlur, False)
+    maxVals = []
+    m0 = _now()
+    for idx, tBlur in enumerate(templates):
+        tH, tW = tBlur.shape[:2]
+        s0 = _now()
+        res, maxVal, maxLoc = patternMatch(imageBlur, tBlur, False)  
+        s1 = _now()
+        print(f"[DEBUG] [Match] Template {idx+1}/{len(templates)} "
+              f"size={tW}x{tH} | matchTemplate: {s1 - s0:.3f}s | max={maxVal:.5f} @ {maxLoc}")
         maxVals.append(maxVal)
-        
-    return sum(maxVals) / len(maxVals)
+    m1 = _now()
+
+    feature = (sum(maxVals) / len(maxVals)) if maxVals else float('nan')
+    total1 = _now()
+    print(f"[DEBUG] [Match] Per-template loop: {(m1 - m0):.3f}s | feature(avg-max)={feature:.6f}")
+    print(f"[DEBUG] [Match] Total getCorrelation: {(total1 - total0):.3f}s")
+
+    return feature
+
+
+
 
 def setSat(img, sat):
     hsv = cv2.cvtColor(img, cv2.COLOR_BGR2HSV)
@@ -203,32 +251,59 @@ def imgIsMSD(path):
         return True
     return False
 
+import time
+def _now(): return time.perf_counter()
+
 def gradeCoin(path, isMSD, isBrown):
-    img = cv2.imread(path, cv2.IMREAD_GRAYSCALE)
+    g0 = _now()
+    print(f"[DEBUG] [Grade] Start gradeCoin | path={path} | isMSD={isMSD} | isBrown={isBrown}")
+
+    r0 = _now()
+    img = path
+    r1 = _now()
+    print(f"[DEBUG] [Grade] Read image: {r1 - r0:.3f}s | shape={None if img is None else img.shape}")
+    if img is None:
+        raise IOError(f"Failed to read image for grading: {path}")
+
+    # Get template
+    tdir = './LincolnCent/Images/MSDTemplates/' if isMSD else './LincolnCent/Images/PatternMatchTemplate/'
+    t0 = _now()
+    templates = _get_templates_blurred(tdir)  
+    t1 = _now()
+    print(f"[DEBUG] [Grade] Templates ready in {t1 - t0:.3f}s | count={len(templates)}")
+
+
+    c0 = _now()
     coefficients = []
-    
     if isMSD:
-        templates = loadImages('grey', './LincolnCent/Images/MSDTemplates/')
-        
-        with open('./LincolnCent/MSD_Prediction_Function.txt', 'r') as reader:
-            for line in reader:
-                coefficients.append(float(line))
+        poly_file = './LincolnCent/MSD_Prediction_Function.txt'
     elif isBrown:
-        templates = loadImages('grey', './LincolnCent/Images/PatternMatchTemplate/')
-
-        with open('./LincolnCent/LHCB_Prediction_Function.txt', 'r') as reader:
-            for line in reader:
-                coefficients.append(float(line))
+        poly_file = './LincolnCent/LHCB_Prediction_Function.txt'
     else:
-        templates = loadImages('grey', './LincolnCent/Images/PatternMatchTemplate/')
+        poly_file = './LincolnCent/LHCR_Prediction_Function.txt'
 
-        with open('./LincolnCent/LHCR_Prediction_Function.txt', 'r') as reader:
-            for line in reader:
-                coefficients.append(float(line))
+    with open(poly_file, 'r') as reader:
+        for line in reader:
+            coefficients.append(float(line))
+    c1 = _now()
+    print(f"[DEBUG] [Grade] Coeffs loaded from {poly_file} in {c1 - c0:.3f}s | count={len(coefficients)}")
 
-    correlation = getCorrelation(img, templates)
+    #Correlation feature 
+    f0 = _now()
+    correlation = getCorrelation(img, templates)   
+    f1 = _now()
+    print(f"[DEBUG] [Grade] getCorrelation: {f1 - f0:.3f}s | feature={correlation:.6f}")
+
+    # polynomial eval
+    p0 = _now()
     p = np.poly1d(coefficients)
-    return p(correlation)
+    grade = p(correlation)
+    p1 = _now()
+    print(f"[DEBUG] [Grade] Poly eval: {p1 - p0:.6f}s | grade={float(grade):.3f}")
+
+    g1 = _now()
+    print(f"[DEBUG] [Grade] Total gradeCoin: {g1 - g0:.3f}s")
+    return grade
 
 if __name__ == '__main__':
     #generatePredictionFunctions()
@@ -237,7 +312,3 @@ if __name__ == '__main__':
     print("Predicted Sheldon Scale grade:", round(grade))
     print("Actual Sheldon Scale grade: 58")
     print("Feature definition (0 - 10):", round(grade / 70 * 10))
-
-
-
-    

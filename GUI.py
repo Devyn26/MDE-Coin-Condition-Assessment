@@ -954,6 +954,10 @@ class App(QWidget):
     # Spawn a background worker to grade the selected images.
     @pyqtSlot()
     def on_grade_click(self):
+        if not self._both_selected():
+            QMessageBox.information(self, "Grade", "Please select both obverse and reverse images.")
+            return
+
         pipe.runPre(self.obverse_path, self.reverse_path)
         self._on_grade_finished()
 

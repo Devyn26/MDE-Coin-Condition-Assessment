@@ -54,13 +54,13 @@ def Histogram_drawing(HSV_Value):
     cv2.waitKey(0)
     cv2.destroyAllWindows()
 
-# Calculate the Mean and Median HSV of the Image
+
 def mean_median_value(im_hsv):
-    # get the mean value
+
     hue_mean = statistics.mean(im_hsv[0])
     saturation_mean = statistics.mean(im_hsv[1])
     value_mean = statistics.mean(im_hsv[2])
-    # get the median value
+
     h,s,l=[],[],[]
     h = im_hsv[0]
     s = im_hsv[1]
@@ -72,8 +72,7 @@ def mean_median_value(im_hsv):
     hue_median = h[length]
     saturation_median = s[length]
     value_median = v[length]
-    # print('MEAN        hue: {0:.1f}, saturation: {1:.1f}, Value: {2:.1f}'.format(hue_mean, saturation_mean, value_mean))
-    # print('MEDIUM      hue: {0:.1f}, saturation: {1:.1f}, Value: {2:.1f}'.format(hue_median, saturation_median,value_median))
+
 
     # 25% median value
     new_data_hue = h[:length]
@@ -84,14 +83,11 @@ def mean_median_value(im_hsv):
     hue_25median = new_data_hue[length_25]
     sat_25median = new_data_sat[length_25]
     val_25median = new_data_val[length_25]
-    # print('25% MEDIUM  hue: {0:.1f}, saturation: {1:.1f}, Value: {2:.1f}'.format(hue_25median, sat_25median,val_25median))
-    # 25% mean value
+
     hue_25mean = statistics.mean(new_data_hue)
     sat_25mean = statistics.mean(new_data_sat)
     val_25mean = statistics.mean(new_data_val)
-    # print('25% MEAN    hue :{0:.1f}, saturation: {1:.1f}, Value: {2:.1f}'.format(hue_25mean, sat_25mean, val_25mean))
 
-    # 75% median value
     new_data_hue = h[length:]
     new_data_sat = s[length:]
     new_data_val = v[length:]
@@ -99,14 +95,10 @@ def mean_median_value(im_hsv):
     hue_75median = new_data_hue[length_25]
     sat_75median = new_data_sat[length_25]
     val_75median = new_data_val[length_25]
-    # print('75% MEDIUM  hue: {0:.1f}, saturation: {1:.1f}, Value: {2:.1f}'.format(hue_75median, sat_75median,val_75median))
-    # 75% mean value
+
     hue_75mean = statistics.mean(new_data_hue)
     sat_75mean = statistics.mean(new_data_sat)
     val_75mean = statistics.mean(new_data_val)
-    # print('75% MEAN    hue :{0:.1f}, saturation: {1:.1f}, Value: {2:.1f}'.format(hue_75mean, sat_75mean, val_75mean))
-    # print('')
-    # print('')
 
 
 
@@ -147,7 +139,6 @@ def Calculate_HSV(cropped):
                     H_hsv = H_prime / 6
                 H_hsv_degree = round(360 * H_hsv, 3)
 
-            # find saturation and Value
 
             V = C_high / C_max * 100
             if C_low == C_high:
@@ -169,24 +160,24 @@ def ONLY_ONE_COIN_INPUT_FOR_COLOR_CLASSIFICATION(imagePath):
     # INPAINT
     mask1 = cv2.threshold(gray, 200, 255, cv2.THRESH_BINARY)[1]
     result1 = cv2.inpaint(Image, mask1, 0.1, cv2.INPAINT_TELEA)
-    region1 = result1[450:600, 700:850]  # y: y+h, x:x+w this is above the data
-    #    y1  y2  x1   x2
-    region2 = result1[400:500, 110:260]  # y: y+h, x:x+w this is above the data
-    #    y1  y2  x1   x2
-    region3 = result1[620:720, 130:240]  # y: y+h, x:x+w this is above the data
-    #    y1  y2  x1   x2
-    region4 = result1[310:380, 120:280]  # y: y+h, x:x+w this is above the data
-    #    y1  y2  x1   x2
-    region5 = result1[310:380, 700:880]  # y: y+h, x:x+w this is above the data
-    #    y1  y2  x1   x2
-    region6 = result1[220:600, 670:730]  # y: y+h, x:x+w this is above the data
+    region1 = result1[450:600, 700:850]  
 
-    HSV_Value_r1 = Calculate_HSV(region1)  # get HSV value
-    HSV_Value_r2 = Calculate_HSV(region2)  # get HSV value
-    HSV_Value_r3 = Calculate_HSV(region3)  # get HSV value
-    HSV_Value_r4 = Calculate_HSV(region4)  # get HSV value
-    HSV_Value_r5 = Calculate_HSV(region5)  # get HSV value
-    HSV_Value_r6 = Calculate_HSV(region6)  # get HSV value
+    region2 = result1[400:500, 110:260]  
+
+    region3 = result1[620:720, 130:240]  
+
+    region4 = result1[310:380, 120:280]
+
+    region5 = result1[310:380, 700:880]  
+
+    region6 = result1[220:600, 670:730]  
+
+    HSV_Value_r1 = Calculate_HSV(region1)  
+    HSV_Value_r2 = Calculate_HSV(region2)  
+    HSV_Value_r3 = Calculate_HSV(region3)  
+    HSV_Value_r4 = Calculate_HSV(region4)  
+    HSV_Value_r5 = Calculate_HSV(region5)  
+    HSV_Value_r6 = Calculate_HSV(region6)  
 
     Median_S = statistics.median(
         HSV_Value_r1[1] + HSV_Value_r2[1] + HSV_Value_r3[1] + HSV_Value_r4[1] + HSV_Value_r5[1] + HSV_Value_r6[1])
@@ -234,7 +225,7 @@ def ONLY_ONE_COIN_INPUT_FOR_COLOR_CLASSIFICATION(imagePath):
                     0, 0, 1, 1, 2, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 1, 1, 1, 0, 1, 1, 1, 2, 2, 2, 2, 2, 2, 2, 2,
                     1, 2, 2, 1, 1, 2, 2, 2, 2, 1, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2,
                     2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 0,
-                    1, 2, 2]  # 66#tail65        #tail60
+                    1, 2, 2] 
 
     color_list = []
     for file in colors_Label:
@@ -276,7 +267,7 @@ def ONLY_ONE_COIN_INPUT_FOR_COLOR_CLASSIFICATION(imagePath):
         results = "Red-Brown"
     else:
         results = "Red"
-    # ----------Outliers-------------START
+
     outliers = 0
 
     X_test=X[135:136, :]
@@ -372,21 +363,22 @@ def Image_HSV_Region1(imagePath):
          result1 = cv2.inpaint(Image, mask1, 0.1, cv2.INPAINT_TELEA)
 
 
-         region1 = result1[450:600,700:850]  # y: y+h, x:x+w this is above the date
-                    #    y1  y2  x1   x2
-         region2 = result1[400:500,110:260]  # y: y+h, x:x+w this is above the liberty
-                    #    y1  y2  x1   x2
-         region3 = result1[620:720,130:240]  # y: y+h, x:x+w this is below the liberty
-                    #    y1  y2  x1   x2
-         region4 = result1[310:380,120:280]  # y: y+h, x:x+w this is below the "in god"
-                    #    y1  y2  x1   x2
-         region5 = result1[310:380,700:880]  # y: y+h, x:x+w this is in front of lincoln's eyes
-                    #    y1  y2  x1   x2
-         region6 = result1[220:600,670:730]  # y: y+h, x:x+w this is below "trust"
-                    #    y1  y2  x1   x2
+         region1 = result1[450:600,700:850] 
+
+         region2 = result1[400:500,110:260]  
+
+         region3 = result1[620:720,130:240]  
+
+         region4 = result1[310:380,120:280]  
+
+         region5 = result1[310:380,700:880]  
+
+         region6 = result1[220:600,670:730]  
+
+                    
     
 
-        # SHOW THE RED REGIONS OF THE COIN BEING SCANNED
+
          """
          # above the date
          cv2.rectangle(Image, (700, 450), (850, 600), (0, 250, 0), 3)   # x left y top  x right  y bottom
@@ -412,12 +404,12 @@ def Image_HSV_Region1(imagePath):
          cv2.destroyAllWindows()
          """
 
-         HSV_Value_r1=Calculate_HSV(region1)  #get HSV value
-         HSV_Value_r2=Calculate_HSV(region2)  #get HSV value
-         HSV_Value_r3=Calculate_HSV(region3)  #get HSV value
-         HSV_Value_r4=Calculate_HSV(region4)  #get HSV value
-         HSV_Value_r5=Calculate_HSV(region5)  #get HSV value
-         HSV_Value_r6=Calculate_HSV(region6)  #get HSV value
+         HSV_Value_r1=Calculate_HSV(region1)  
+         HSV_Value_r2=Calculate_HSV(region2)  
+         HSV_Value_r3=Calculate_HSV(region3)  
+         HSV_Value_r4=Calculate_HSV(region4)  
+         HSV_Value_r5=Calculate_HSV(region5)  
+         HSV_Value_r6=Calculate_HSV(region6)  
          print("---------------------------")
 
          """
@@ -430,12 +422,12 @@ def Image_HSV_Region1(imagePath):
          """
          
 
-         mean_median_value(HSV_Value_r1)      #print mean median
-         mean_median_value(HSV_Value_r2)      #print mean median
-         mean_median_value(HSV_Value_r3)      #print mean median
-         mean_median_value(HSV_Value_r4)      #print mean median
-         mean_median_value(HSV_Value_r5)      #print mean median
-         mean_median_value(HSV_Value_r6)      #print mean median
+         mean_median_value(HSV_Value_r1)      
+         mean_median_value(HSV_Value_r2)      
+         mean_median_value(HSV_Value_r3)      
+         mean_median_value(HSV_Value_r4)      
+         mean_median_value(HSV_Value_r5)     
+         mean_median_value(HSV_Value_r6)    
 
          All_H = HSV_Value_r1[0] + HSV_Value_r2[0] + HSV_Value_r3[0] + HSV_Value_r4[0] + HSV_Value_r5[0] + HSV_Value_r6[0]
          All_S = HSV_Value_r1[1] + HSV_Value_r2[1] + HSV_Value_r3[1] + HSV_Value_r4[1] + HSV_Value_r5[1] + HSV_Value_r6[1]
@@ -468,9 +460,6 @@ def Image_HSV_Region1(imagePath):
          list_Median_V.append(Median_V)
          i+=1
     
-    # calculate the %Red of coin
-    # print("Percentage: ")
-    # print(list_RP)
 
     print("New Percentage: ")
     print(list_NRP)
@@ -481,7 +470,7 @@ def Image_HSV_Region1(imagePath):
     print("Median Val: ")
     print(list_Median_V)
 
-    # print('Possible Red Percentage: {0:.1f}'.format(Pecetange_Red))
+
 
     print('Possible New Red Percentage: {0:.1f}'.format(New_Percentage_Red))
 
@@ -511,9 +500,7 @@ def Image_HSV_Region1(imagePath):
     overalP = BN_P + RB_P + RED_P + QC_P + LR_P 
     overallX = BN + RB + RED + QC + LR 
 
-    #prototyping
-    #overalP = proto_p
-    #overallX = proto
+
 
     # %Red Plot for Old Equation
     """
@@ -538,8 +525,7 @@ def Image_HSV_Region1(imagePath):
     
 
     overallNewP = N_BN_P + N_RB_P + N_RED_P + N_QC_P + N_LR_P
-    #prototyping
-    #overallNewP = proto_p
+
 
     # %Red Plot for New Equation
     """
@@ -580,4 +566,3 @@ def isMSD(imagePath):
 
 if __name__ == '__main__':
     Image_HSV_Region1()
- 

@@ -8,7 +8,7 @@ and rotated to the correct orientation.
 Checks brightness/glare and brightens the coin if needed.
 
 Author: John Anthony Kadian, Eric Morley
-Date: 10/1/2025
+Date: 10/15/2025
 """
 
 import cv2
@@ -17,6 +17,9 @@ import matplotlib.pyplot as plt
 import os
 from MSD_rotation import rotate_coin_pair
 from MorganSilverDollar.Morgan_Dollar_main import InputCoin
+from LincolnCent import ImageHSV, patternMatching, WheatStalkGrader
+import time
+from PIL import Image
 
 def smart_crop_and_scale(image):
     """
@@ -56,80 +59,56 @@ def smart_crop_and_scale(image):
     
     return resized
 
-def detect_coin(image):
+def detect_coin(image, num_blurs=3, blur_kernel=(15, 15)):
     """
-    Detect coin using edge detection within the assumed 80% radius.
-    Uses HoughCircles to find circular patterns from fragmented edges.
+    Detect coin using the new preprocessing pipeline with configurable blur parameters.
+    Uses the improved preprocessing from LWC_preprocessing_skimage.py
     """
     h, w = image.shape[:2]
     center = (w//2, h//2)
     assumed_radius = int(w * 0.4)  # 80% diameter = 40% radius
     
-    # create mask for assumed coin circle
-    mask = np.zeros((h, w), dtype=np.uint8)
-    cv2.circle(mask, center, assumed_radius, 255, -1)
-    
     # convert to grayscale
     gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
     
-    # Gaussian blur to reduce noise
-    blurred = cv2.GaussianBlur(gray, (5, 5), 0)
+    # apply configurable number of blurs to suppress fine details
+    current = gray.copy()
+    for i in range(num_blurs):
+        current = cv2.GaussianBlur(current, blur_kernel, 0)
     
-    # canny edge detection with higher thresholds to reduce noise
-    edges = cv2.Canny(blurred, 100, 200)
+    # apply bilateral filter
+    bilateral = cv2.bilateralFilter(current, d=5, sigmaColor=50, sigmaSpace=50)
     
-    # apply mask to edges
-    masked_edges = cv2.bitwise_and(edges, mask)
-    
-    # clean up edges with morphological operations
-    # idea from https://www.reddit.com/r/computervision/comments/1k9p83h/detecting_striped_circles_using_computer_vision/
-    # to clean up the outer edges of the coin, to overcome complex grooves and ridges
-    kernel = np.ones((3,3), np.uint8)
-    cleaned_edges = cv2.morphologyEx(masked_edges, cv2.MORPH_CLOSE, kernel)
-    cleaned_edges = cv2.morphologyEx(cleaned_edges, cv2.MORPH_OPEN, kernel)
-    
-    # using HoughCircles method to find circular patterns from fragmented edges
-    circles = cv2.HoughCircles(cleaned_edges, cv2.HOUGH_GRADIENT, dp=1.2, minDist=100,
-                              param1=50, param2=20, minRadius=int(assumed_radius*0.6), 
-                              maxRadius=int(assumed_radius*1.2))
+    # houghCircles on bilateral filtered image
+    circles = cv2.HoughCircles(
+        bilateral,
+        cv2.HOUGH_GRADIENT,
+        dp=1.2,
+        minDist=int(assumed_radius * 0.4),
+        param1=50,
+        param2=30,
+        minRadius=int(assumed_radius * 0.4),
+        maxRadius=int(assumed_radius * 1.6)
+    )
     
     if circles is not None:
         circles = np.round(circles[0, :]).astype("int")
         
-        # take first circle from HoughCircles (highest confidence)
+        # take first circle from houghCircles
         if len(circles) > 0:
             x, y, r = circles[0]
-            # expand radius by 5% because the inner rim is almost always the HoughCircles circle with the highest confidence
-            expanded_r = int(r * 1.05)
-            print(f"HoughCircles: center=({x}, {y}), radius={r} -> {expanded_r}")
+            print(f"HoughCircles: center=({x}, {y}), radius={r}")
 
             if not (brightness_glare_check(image, x, y, r)):
-                return None, None, None, cleaned_edges
+                return None, None, None, bilateral, bilateral
 
-            return x, y, expanded_r, cleaned_edges
-        
-        # old center-based selection - it used the same circle for every test case I tried
-        # but this method is slower and likely less accurate than using cv2.HoughCircles built sorting
-        # best_circle = None
-        # min_distance = float('inf')
-        # 
-        # for circle in circles:
-        #     x, y, r = circle
-        #     # Calculate distance from center
-        #     distance = np.sqrt((x - center[0])**2 + (y - center[1])**2)
-        #     if distance < min_distance:
-        #         min_distance = distance
-        #         best_circle = circle
-        # 
-        # if best_circle is not None:
-        #     x, y, r = best_circle
-        #     # Expand radius by 5% to get outer rim instead of inner rim
-        #     expanded_r = int(r * 1.05)
-        #     print(f"HoughCircles: center=({x}, {y}), radius={r} -> {expanded_r}")
-        #     return x, y, expanded_r, cleaned_edges
-    
-    print("No coin detected")
-    return None, None, None, cleaned_edges
+            return x, y, r, bilateral, bilateral
+        else:
+            print("No circles detected by HoughCircles")
+            return None, None, None, bilateral, bilateral
+    else:
+        print("No circles detected by HoughCircles")
+        return None, None, None, bilateral, bilateral
 
 def center_and_scale_coin(image, coin_x, coin_y, coin_radius):
     """
@@ -230,7 +209,7 @@ def process_coin_image(image_path, face_type="obverse"):
     Returns:
         numpy.ndarray: The processed coin image (1000x1000) with coin centered and background white.
     """
-    # Read the image
+    # read the image
     image = cv2.imread(image_path)
     if image is None:
         print("Error loading image.")
@@ -239,68 +218,77 @@ def process_coin_image(image_path, face_type="obverse"):
     # first crop and scale to1000x1000
     processed_image = smart_crop_and_scale(image)
 
-    # reference mask for rotation normalization from MSD project team
+    # reference mask for rotation normalization
     reference_mask = load_reference_mask(face_type)
 
-    # detect coin circle using HoughCircles detection
-    x, y, r, edges = detect_coin(processed_image)
+    # detect coin circle using new preprocessing pipeline
+    x, y, r, edges, edges_before_morph = detect_coin(processed_image)
 
-    # visualize results for debugging and visual feedback
+    # visualize results for debugging
     debug_image = processed_image.copy()
-
-    # assumed coin circle (green) - 97.5% of 1000px = 487px radius scaled from 80% of original image width
+    
+    # assumed coin circle (green)
     cv2.circle(debug_image, (500, 500), 487, (0, 255, 0), 2)
     cv2.putText(debug_image, "ASSUMED COIN POSITION", (10, 30), cv2.FONT_HERSHEY_SIMPLEX, 0.7, (0, 255, 0), 2)
-
+    
     if x is None or y is None or r is None:
         print("Skipping brightening because coin was not detected")
     else:
         # brighten image
         brightened_image = brighten_coin(processed_image, x, y, r)
-    
+
     if x is not None and y is not None and r is not None:
+
         # draw detected circle (red)
         cv2.circle(debug_image, (x, y), r, (0, 0, 255), 3)
         cv2.circle(debug_image, (x, y), 2, (0, 0, 255), 3)
         cv2.putText(debug_image, "DETECTED COIN", (10, 60), cv2.FONT_HERSHEY_SIMPLEX, 0.7, (0, 0, 255), 2)
         
-        # now scale image to to center the DETECTED coin to 975px diameter, instead of the assumed coin circle
+        # scale image to center the detected coin to 975px diameter
         output = center_and_scale_coin(brightened_image, x, y, r)
         print(f"Final: detected center=({x}, {y}), radius={r} -> scaled to 97.5% (487px radius)")
     else:
-        print("No circles were detected.")
+        print("No circles were detected")
         output = processed_image
 
     # output plots
+    '''
     original_rgb = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
     debug_rgb = cv2.cvtColor(debug_image, cv2.COLOR_BGR2RGB)
     final_rgb = cv2.cvtColor(output, cv2.COLOR_BGR2RGB)
     
 
-    fig, (ax1, ax2, ax3, ax4) = plt.subplots(1, 4, figsize=(24, 6))
+    fig, ((ax1, ax2, ax3), (ax4, ax5, ax6)) = plt.subplots(2, 3, figsize=(18, 12))
     
-
+    
+    # top row
     ax1.imshow(original_rgb)
-    ax1.set_title(f"Original Image ({image.shape[1]}x{image.shape[0]})")
+    ax1.set_title(f"Original Image ({image.shape[1]}x{image.shape[0]})", fontsize=10)
     ax1.axis("off")
     
-
     ax2.imshow(debug_rgb)
-    ax2.set_title("Processed Image (1000x1000) with Circle Detection")
+    ax2.set_title("Processed Image with Circle Detection", fontsize=10)
     ax2.axis("off")
     
-
-    ax3.imshow(edges, cmap='gray')
-    ax3.set_title("Edge Detection Within Assumed Radius")
+    ax3.imshow(edges_before_morph, cmap='gray')
+    ax3.set_title("Preprocessed Image (Hough Input)", fontsize=10)
     ax3.axis("off")
     
-    ax4.imshow(final_rgb)
-    ax4.set_title("Final Coin 1000x1000 and centered")
+    # bottom row
+    ax4.imshow(edges, cmap='gray')
+    ax4.set_title("Preprocessed Image (Hough Input)", fontsize=10)
     ax4.axis("off")
+    
+    ax5.imshow(final_rgb)
+    ax5.set_title("Final Coin Centered", fontsize=10)
+    ax5.axis("off")
+    
+    # hide empty subplot
+    ax6.axis("off")
     
     plt.tight_layout()
     plt.show()
-
+    '''
     return output
 
 def process_coin(obverse_path, reverse_path):
@@ -335,11 +323,13 @@ def brightness_glare_check(img: np.ndarray, x: int, y: int, r: int) -> int:
 
     coin_mask = np.zeros_like(gray, dtype=np.uint8)
     cv2.circle(coin_mask, (x, y), r, 255, -1)
-    brightness = cv2.mean(gray, mask=coin_mask)[0]
-    print(f"Average brightness inside coin: {brightness:.2f}")
 
     # glare check setup
     coin_pixels = gray[coin_mask == 255]
+
+    brightness = cv2.mean(gray, mask=coin_mask)[0]
+    print(f"Average brightness inside coin: {brightness:.2f}")
+
     glare_pct = np.sum(coin_pixels >= 255) / coin_pixels.size * 100
     print(f"Glare pixels >= 255: {glare_pct:.2f}%")
 
@@ -400,6 +390,80 @@ def brighten_coin(img: np.ndarray, x: int, y: int, r: int) -> np.ndarray:
     print(f"After brightening - Mean: {np.mean(new_pixels):.2f}, Max: {np.max(new_pixels)}")
 
     return brightened
+
+def runPre(obverse_path, reverse_path):
+    obverse_result, reverse_result = process_coin(obverse_path, reverse_path)
+
+    cv2.imwrite('COIN_Proc_ob.jpg', obverse_result)
+    cv2.imwrite('COIN_Proc_rev.jpg', reverse_result)
+
+    print(f"\nExtraction Results:")
+    print(f"Obverse extracted and saved to COIN_Proc_ob.jpg")
+    print(f"Reverse extracted and saved to COIN_Proc_rev.jpg")
+    
+    # identify and apply rotation using both faces
+    from COIN_identifier import identify_and_rotate_coin_pair
+    rotated_obverse, rotated_reverse, obv_type, rev_type = identify_and_rotate_coin_pair(
+        obverse_result, reverse_result)
+
+    # save rotated finals
+    cv2.imwrite('COIN_Final_ob.jpg', rotated_obverse)
+    cv2.imwrite('COIN_Final_rev.jpg', rotated_reverse)
+
+    print("\nFinal Results:")
+    print(f"Obverse: {obv_type} -> saved to COIN_Final_ob.jpg")
+    print(f"Reverse: {rev_type} -> saved to COIN_Final_rev.jpg")
+
+    if obv_type == 'MSD' and rev_type == 'MSD':
+        print("running MSD")
+        InputCoin.runMSDCode(rotated_obverse, rotated_reverse)
+    elif obv_type == 'LWC' and rev_type == 'LWC':
+        print("running LWC")
+        #color_label, color_outlier = ImageHSV.ONLY_ONE_COIN_INPUT_FOR_COLOR_CLASSIFICATION(rotated_obverse)
+        #is_brown = (str(color_label).strip().lower() == "brown")
+        print("started timer")
+        start_time = time.perf_counter()
+        fm_grade_float = float(patternMatching.gradeCoin(rotated_obverse, False, True))
+        fm_grade = round(fm_grade_float)
+        left_grade, right_grade, wheat_oss = WheatStalkGrader.gradeWheatStalkPenny(rotated_reverse)
+        end_time = time.perf_counter()
+        elapsed = end_time - start_time
+        print(f"Elapsed time: {elapsed:.2f} seconds")
+        grade_wheat = round(wheat_oss)
+        grade = (fm_grade + grade_wheat) / 2
+        print(f"Grade: {grade:.2f}")
+        manualGen(rotated_obverse, rotated_reverse, grade, 1)
+        
+def manualGen(obv_img, rev_img, grade, coin=0):
+    obv_img = cv2.cvtColor(obv_img, cv2.COLOR_BGR2RGB)
+    rev_img = cv2.cvtColor(rev_img, cv2.COLOR_BGR2RGB)
+
+    c = InputCoin.inputCoin(coin_type="Lincoln Wheat Cent")
+    dr = c.detailedResults
+
+    dr.ogObverse = Image.fromarray(obv_img)
+    dr.ogReverse = Image.fromarray(rev_img)
+
+    dr.flatObverse = None
+    dr.flatReverse = None
+
+    dr.condMasks["highSigObverse"] = None
+    dr.condMasks["highSigReverse"] = None
+    dr.condMasks["lowSigObverse"] = None
+    dr.condMasks["lowSigReverse"] = None
+    dr.condMasks["rimObverse"] = None
+    dr.condMasks["rimReverse"] = None
+
+    dr.conditionObverse = None
+    dr.conditionReverse = None
+
+    dr.conditionScore = grade
+    dr.brillianceScore = None
+    dr.histBrilliance = None
+
+    print("Manual Report Generation Started")
+
+    c.generateDetailedResults()
 
 if __name__ == "__main__":
     obverse_path = "front-noisy.jpg"

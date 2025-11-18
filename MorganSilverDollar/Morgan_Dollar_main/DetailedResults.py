@@ -19,6 +19,8 @@ from PIL import Image
 import tempfile
 from typing import Iterable, Optional, Tuple
 
+import COIN_identifier
+
 # --- Lazy import of Grader so no other files need changes --------------------
 _MDGrader = None
 try:
@@ -65,6 +67,9 @@ class PDF(FPDF):
             "rimObverse": None,
             "rimReverse": None,
         }
+        self.LWCMaks = {
+            
+            }
 
         # Scores / meta
         self.conditionScore: Optional[float] = None
@@ -269,8 +274,9 @@ class PDF(FPDF):
     # Compose Page 2 text summary
     def genTextPageTwo_Scores(self):
         """Render Page 2: condition summary line (with Confidence) plus brief details."""
-        # Attempt to fill confidence from MorganGrader if not already provided
-        self._auto_confidence()
+        if(self.coin_name == "Morgan Silver Dollar"):
+            # Attempt to fill confidence from MorganGrader if not already provided
+            self._auto_confidence()
 
         self.set_xy(20.0, 15.0)
         self.set_font('Arial', 'B', 16)
@@ -283,9 +289,10 @@ class PDF(FPDF):
         else:
             parts.append("Condition: N/A")
 
-        conf_int = self._fmt_conf()
-        if conf_int is not None:
-            parts.append(f"Confidence: {conf_int}%")
+        if(self.coin_name == "Morgan Silver Dollar"):
+            conf_int = self._fmt_conf()
+            if conf_int is not None:
+                parts.append(f"Confidence: {conf_int}%")
 
         cond_pct = self._percentile(self.conditionScore, self.conditionDistribution)
         if cond_pct is not None:
@@ -329,44 +336,53 @@ class PDF(FPDF):
     # Compose Page 3 titles (no coverage line)
     def genTextPageThree(self):
         """Render Page 3 titles; coverage line intentionally removed per spec."""
-        self.set_xy(20.0, 15.0)
-        self.set_font('Arial', 'B', 14)
-        self.cell(w=PDF_WIDTH, h=10.0, align='L', txt="Flat Regions (Overlays)", border=0)
+        if(self.coin_name == "Morgan Silver Dollar"):
+            self.set_xy(20.0, 15.0)
+            self.set_font('Arial', 'B', 14)
+            self.cell(w=PDF_WIDTH, h=10.0, align='L', txt="Flat Regions (Overlays)", border=0)
 
         # Coverage text intentionally removed.
 
-        self.set_xy(20.0, 135.0)
-        self.set_font('Arial', 'B', 14)
-        self.cell(w=PDF_WIDTH, h=10.0, align='L', txt="High Significance (Overlays)", border=0)
+            self.set_xy(20.0, 135.0)
+            self.set_font('Arial', 'B', 14)
+            self.cell(w=PDF_WIDTH, h=10.0, align='L', txt="High Significance (Overlays)", border=0)
+
+        if(self.coin_name == "Lincoln Wheat Cent"):
+            self.set_xy(20.0, 15.0)
+            self.set_font('Arial', 'B', 14)
+            self.cell(w=PDF_WIDTH, h=10.0, align='L', txt="Regions Obverse (Overlays)", border=0)
 
     # Render all Page 3 overlay images
     def genImagesPageThree(self):
         """Render Page 3 images: flat overlays (top) and high-significance overlays (bottom)."""
-        flat_obv_overlay = self._overlay_mask(self.ogObverse, self.flatObverse,
-                                              color=(0, 128, 255), alpha=0.40, base_dim=0.55)
-        flat_rev_overlay = self._overlay_mask(self.ogReverse, self.flatReverse,
-                                              color=(0, 128, 255), alpha=0.40, base_dim=0.55)
+        if(self.coin_name == "Morgan Silver Dollar"):
+            flat_obv_overlay = self._overlay_mask(self.ogObverse, self.flatObverse,
+                                                  color=(0, 128, 255), alpha=0.40, base_dim=0.55)
+            flat_rev_overlay = self._overlay_mask(self.ogReverse, self.flatReverse,
+                                                  color=(0, 128, 255), alpha=0.40, base_dim=0.55)
 
-        self._frame_and_image(self._col1_x, 30.0, self._img_w, self._img_h, flat_obv_overlay,
-                              alt_txt=f"No flat/{self.front_label.lower()}")
-        self._caption(self._col1_x + self._img_w / 2, 30.0 + self._img_h + 5.0, f"Flat Regions ({self.front_label})")
+            self._frame_and_image(self._col1_x, 30.0, self._img_w, self._img_h, flat_obv_overlay,
+                                  alt_txt=f"No flat/{self.front_label.lower()}")
+            self._caption(self._col1_x + self._img_w / 2, 30.0 + self._img_h + 5.0, f"Flat Regions ({self.front_label})")
 
-        self._frame_and_image(self._col2_x, 30.0, self._img_w, self._img_h, flat_rev_overlay,
-                              alt_txt=f"No flat/{self.back_label.lower()}")
-        self._caption(self._col2_x + self._img_w / 2, 30.0 + self._img_h + 5.0, f"Flat Regions ({self.back_label})")
+            self._frame_and_image(self._col2_x, 30.0, self._img_w, self._img_h, flat_rev_overlay,
+                                  alt_txt=f"No flat/{self.back_label.lower()}")
+            self._caption(self._col2_x + self._img_w / 2, 30.0 + self._img_h + 5.0, f"Flat Regions ({self.back_label})")
 
-        high_obv_overlay = self._overlay_mask(self.ogObverse, self.condMasks["highSigObverse"],
-                                              color=(255, 64, 0), alpha=0.40, base_dim=0.55)
-        high_rev_overlay = self._overlay_mask(self.ogReverse, self.condMasks["highSigReverse"],
-                                              color=(255, 64, 0), alpha=0.40, base_dim=0.55)
+            high_obv_overlay = self._overlay_mask(self.ogObverse, self.condMasks["highSigObverse"],
+                                                  color=(255, 64, 0), alpha=0.40, base_dim=0.55)
+            high_rev_overlay = self._overlay_mask(self.ogReverse, self.condMasks["highSigReverse"],
+                                                  color=(255, 64, 0), alpha=0.40, base_dim=0.55)
 
-        self._frame_and_image(self._col1_x, 150.0, self._img_w, self._img_h, high_obv_overlay,
-                              alt_txt=f"No high-sig/{self.front_label.lower()}")
-        self._caption(self._col1_x + self._img_w / 2, 150.0 + self._img_h + 5.0, f"High Significance ({self.front_label})")
+            self._frame_and_image(self._col1_x, 150.0, self._img_w, self._img_h, high_obv_overlay,
+                                  alt_txt=f"No high-sig/{self.front_label.lower()}")
+            self._caption(self._col1_x + self._img_w / 2, 150.0 + self._img_h + 5.0, f"High Significance ({self.front_label})")
 
-        self._frame_and_image(self._col2_x, 150.0, self._img_w, self._img_h, high_rev_overlay,
-                              alt_txt=f"No high-sig/{self.back_label.lower()}")
-        self._caption(self._col2_x + self._img_w / 2, 150.0 + self._img_h + 5.0, f"High Significance ({self.back_label})")
+            self._frame_and_image(self._col2_x, 150.0, self._img_w, self._img_h, high_rev_overlay,
+                                  alt_txt=f"No high-sig/{self.back_label.lower()}")
+            self._caption(self._col2_x + self._img_w / 2, 150.0 + self._img_h + 5.0, f"High Significance ({self.back_label})")
+
+        if(self.coin_name == "Lincoln Wheat Cent"):
 
     # ================= Page 4: Low Significance and Rim ===================
 
@@ -415,6 +431,7 @@ class PDF(FPDF):
     # Assemble all pages and write the PDF
     def build_report(self, output_path: str = 'MorganSilverDollar/Morgan_Dollar_main/test.pdf'):
         """Assemble all pages and write the PDF to disk, cleaning temp files afterwards."""
+
         self.add_page()                     # Page 1
         self.genPageOneImagesOnly()
 

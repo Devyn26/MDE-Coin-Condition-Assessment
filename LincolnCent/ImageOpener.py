@@ -23,12 +23,12 @@ def loadImages(mode, imageFolderPath):
         elif mode == 'grey':
             images.append(cv2.imread(imagePath, cv2.IMREAD_GRAYSCALE))
 
-        if __name__ == '__main__':
-            windowName = "from David Lawrence Rare Coins " + i
-            cv2.imshow(windowName, images[-1])
+       # if __name__ == '__main__':
+       #     windowName = "from David Lawrence Rare Coins " + i
+       #     cv2.imshow(windowName, images[-1])
 
-    cv2.waitKey(0)
-    cv2.destroyAllWindows()
+    #cv2.waitKey(0)
+   # cv2.destroyAllWindows()
     
     return images
 

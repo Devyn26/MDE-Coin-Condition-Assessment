@@ -35,12 +35,12 @@ from PIL import Image
 
 class inputCoin:
 
-    def __init__(self):
+    def __init__(self, coin_type="Morgan Silver Dollar"):
         # Objects
         self.grader = Grader()
         self.obverseCoin = CoinImage()  # CoinImage object
         self.reverseCoin = CoinImage()  # CoinImage object
-        self.detailedResults = PDF()
+        self.detailedResults = PDF(coin_name=coin_type)
         # Features
         self.predictedGrade = None  # Int value
         self.obverseFeatures = []  # List in order: Flat Mask -> Face Mask -> Hair Mask -> Rim Mask
