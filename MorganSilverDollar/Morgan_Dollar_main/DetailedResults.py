@@ -382,8 +382,6 @@ class PDF(FPDF):
                                   alt_txt=f"No high-sig/{self.back_label.lower()}")
             self._caption(self._col2_x + self._img_w / 2, 150.0 + self._img_h + 5.0, f"High Significance ({self.back_label})")
 
-        if(self.coin_name == "Lincoln Wheat Cent"):
-
     # ================= Page 4: Low Significance and Rim ===================
 
     # Compose Page 4 titles
