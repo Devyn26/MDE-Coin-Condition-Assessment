@@ -91,21 +91,23 @@ def identify_coin_type(coin_image, face_type):
         best_angle = msd_angle
         print("Identification by steepness score: MSD wins")
     else:
-        # perfect tie: fall back to lower raw score
-        if lwc_score < msd_score:
+        # perfect tie: fall back to higher raw correlation score
+        if lwc_score > msd_score:
             coin_type = "LWC"; best_score = lwc_score; best_angle = lwc_angle
             print("Tie on steepness score; raw score tie-breaker -> LWC")
         else:
             coin_type = "MSD"; best_score = msd_score; best_angle = msd_angle
             print("Tie on steepness score; raw score tie-breaker -> MSD")
-    '''
+    
     # Create visualization only if not suppressed via env var
+    '''
     if os.environ.get('COIN_ID_VIS', '1') == '1':
         create_identification_visualization(coin_image, face_type, lwc_score, msd_score, 
                                          lwc_angle, msd_angle, lwc_score_metric, msd_score_metric,
                                          coin_type, 0, 0, 0, 0,
                                          lwc_scores, msd_scores, lwc_angles, msd_angles)
-    '''
+        '''
+    
     return coin_type, best_score, best_angle
 
 
@@ -179,7 +181,7 @@ def identify_coin_type_metrics(coin_image, face_type):
     elif msd_score_metric > lwc_score_metric:
         coin_type = "MSD"; best_score = msd_score; best_angle = msd_angle
     else:
-        if lwc_score < msd_score:
+        if lwc_score > msd_score:
             coin_type = "LWC"; best_score = lwc_score; best_angle = lwc_angle
         else:
             coin_type = "MSD"; best_score = msd_score; best_angle = msd_angle

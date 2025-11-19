@@ -262,6 +262,7 @@ def process_coin_image(image_path, face_type="obverse"):
         print("No circles were detected")
         output = processed_image
 
+    '''
     # output plots
     original_rgb = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
     debug_rgb = cv2.cvtColor(debug_image, cv2.COLOR_BGR2RGB)
@@ -298,7 +299,7 @@ def process_coin_image(image_path, face_type="obverse"):
     
     plt.tight_layout()
     plt.show()
-
+    '''
     return output
 
 def process_coin(obverse_path, reverse_path):

@@ -18,46 +18,9 @@ import os
 from MSD_rotation import rotate_coin_pair
 from MorganSilverDollar.Morgan_Dollar_main import InputCoin
 from LincolnCent import ImageHSV, patternMatching, WheatStalkGrader
+from COIN_preprocessing import smart_crop_and_scale, center_and_scale_coin, load_reference_mask, process_coin_image, process_coin
 import time
 from PIL import Image
-
-def smart_crop_and_scale(image):
-    """
-    Assume coin is placed within a circle with diameter 80% of width, centered. 
-    Crop square and scale to 1000x1000 to speed up coin detection and increase accuracy. (more focused search space)
-    This is designed assuming our GUI will have a stencil of roughly where the coin should
-    be placed in the user's photo.
-
-    Args:
-        image (numpy.ndarray): The input image.
-
-    Returns:
-        numpy.ndarray: The processed square and resized image with assumed coin circle.
-    """
-    h, w = image.shape[:2]
-    
-    # assumed coin circle (80% of width, centered)
-    coin_diameter = int(w * 0.8)
-    coin_radius = coin_diameter // 2
-    center_x, center_y = w // 2, h // 2
-    
-    # crop square around the assumed coin circle
-    # square size = 100% of width (or height, whichever is smaller)
-    crop_size = min(w, h)
-    half_crop = crop_size // 2
-    
-    x1 = max(0, center_x - half_crop)
-    y1 = max(0, center_y - half_crop)
-    x2 = min(w, center_x + half_crop)
-    y2 = min(h, center_y + half_crop)
-    
-    # crop the image to the square
-    cropped = image[y1:y2, x1:x2]
-    
-    # scale to 1000x1000, with respect to the assumed coin circle
-    resized = cv2.resize(cropped, (1000, 1000))
-    
-    return resized
 
 def detect_coin(image, num_blurs=3, blur_kernel=(15, 15)):
     """
@@ -110,94 +73,7 @@ def detect_coin(image, num_blurs=3, blur_kernel=(15, 15)):
         print("No circles detected by HoughCircles")
         return None, None, None, bilateral, bilateral
 
-def center_and_scale_coin(image, coin_x, coin_y, coin_radius):
-    """
-    Extract the coin from detected location and center it in a 1000x1000 image
-    with the coin taking up exactly 975px diameter and white background.
-
-    * The 975px diameter was determined by measuring the average coin diameter in the test images in the MSD
-    grading model image dataset *
-    
-    Args:
-        image: The 1000x1000 processed image
-        coin_x, coin_y, coin_radius: Detected coin parameters
-    
-    Returns:
-        Final 1000x1000 image with coin centered at 97.5% diameter and white background
-    """
-    # target: 975px diameter = 487.5px radius (round down because pixels are integers)
-    target_radius = 487
-    target_center = (500, 500)
-    
-    # determine scale factor to make coin exactly target_radius
-    scale_factor = target_radius / coin_radius
-    
-    # new coin position parameters after scaling
-    new_coin_x = int(coin_x * scale_factor)
-    new_coin_y = int(coin_y * scale_factor)
-    
-    # now scale the entire image
-    new_size = int(1000 * scale_factor)
-    scaled_image = cv2.resize(image, (new_size, new_size))
-    
-    # offset to center the coin
-    offset_x = target_center[0] - new_coin_x
-    offset_y = target_center[1] - new_coin_y
-    
-    # create final image canvas starting with 1000x1000 white background
-    final_canvas = np.ones((1000, 1000, 3), dtype=np.uint8) * 255
-    
-    
-    # paste coordinates - where to place the coin on the 1000x1000 canvas
-    paste_x1 = max(0, offset_x)
-    paste_y1 = max(0, offset_y)
-    paste_x2 = min(1000, offset_x + new_size)
-    paste_y2 = min(1000, offset_y + new_size)
-    
-    # source coordinates - the part of the scaled image to copy from
-    src_x1 = max(0, -offset_x)
-    src_y1 = max(0, -offset_y)
-    src_x2 = src_x1 + (paste_x2 - paste_x1)
-    src_y2 = src_y1 + (paste_y2 - paste_y1)
-    
-    # paste coin in the white 1000x1000 canvas
-    final_canvas[paste_y1:paste_y2, paste_x1:paste_x2] = scaled_image[src_y1:src_y2, src_x1:src_x2]
-    
-    # create and apply circular mask for cropping background outside the coin region
-    final_mask = np.zeros((1000, 1000), dtype=np.uint8)
-    cv2.circle(final_mask, target_center, target_radius, 255, -1)
-    final_canvas[final_mask == 0] = [255, 255, 255]
-    
-    return final_canvas
-
-def load_reference_mask(face_type):
-    """
-    Load the appropriate reference mask for rotation normalization.
-    
-    Args:
-        face_type (str): Either "obverse" or "reverse"
-    
-    Returns:
-        numpy.ndarray: The reference mask image (1000x1000)
-    """
-    mask_dir = "MorganSilverDollar/Morgan-Dollar-main/CustomMasks"
-    
-    if face_type.lower() == "obverse":
-        mask_path = os.path.join(mask_dir, "obv_flat.jpg")
-    elif face_type.lower() == "reverse":
-        mask_path = os.path.join(mask_dir, "rev_flat.jpg")
-    else:
-        raise ValueError("face_type must be 'obverse' or 'reverse'")
-    
-    mask = cv2.imread(mask_path, cv2.IMREAD_GRAYSCALE)
-    if mask is None:
-        print(f"Could not load mask {mask_path}")
-        return None
-    
-    print(f"Loaded {face_type} reference mask: {mask.shape}")
-    return mask
-
-def process_coin_image(image_path, face_type="obverse"):
+def pprocess_coin_image(image_path, face_type="obverse"):
     """
     Processes a coin image: crops to square, scales to 1000x1000, detects coin circle,
     and creates a properly centered and cropped final image.
@@ -290,26 +166,6 @@ def process_coin_image(image_path, face_type="obverse"):
     plt.show()
     '''
     return output
-
-def process_coin(obverse_path, reverse_path):
-    """
-    Processes both obverse and reverse coin images using the same pipeline
-    but with appropriate masks for each face type.
-
-    Args:
-        obverse_path (str): Path to the obverse (front) image file.
-        reverse_path (str): Path to the reverse (back) image file.
-
-    Returns:
-        tuple: (processed_obverse, processed_reverse) - Both 1000x1000 images
-    """
-    print("Processing obverse (front)...")
-    obverse_result = process_coin_image(obverse_path, "obverse")
-    
-    print("\nProcessing reverse (back)...")
-    reverse_result = process_coin_image(reverse_path, "reverse")
-    
-    return obverse_result, reverse_result
 
 def brightness_glare_check(img: np.ndarray, x: int, y: int, r: int) -> int:
     """

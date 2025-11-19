@@ -294,6 +294,13 @@ class PDF(FPDF):
             if conf_int is not None:
                 parts.append(f"Confidence: {conf_int}%")
 
+        if(self.coin_name == "Lincoln Wheat Cent"):
+            confidence = [-8.16, 0.287, -0.00225]
+            conf_int = int(100 * (confidence[0] + confidence[1] * self.conditionScore + confidence[2] * self.conditionScore * self.conditionScore))
+            #conf_int = self._fmt_conf
+            if conf_int is not None:
+                parts.append(f"Confidence: {conf_int}%")
+
         cond_pct = self._percentile(self.conditionScore, self.conditionDistribution)
         if cond_pct is not None:
             parts.append(f"Percentile vs coins: {cond_pct}%")
