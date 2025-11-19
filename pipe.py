@@ -191,9 +191,14 @@ def runPre(obverse_path, reverse_path):
         end_time = time.perf_counter()
         elapsed = end_time - start_time
         print(f"Elapsed time: {elapsed:.2f} seconds")
-        grade_wheat = round(wheat_oss)
-        grade = (fm_grade + grade_wheat) / 2
-        print(f"Grade: {grade:.2f}")
+        # Combine only values strictly within (0, 70]
+        valid_components = []
+        if 0.0 < fm_grade_float <= 70.0:
+            valid_components.append(float(fm_grade_float))
+        if 0.0 < float(wheat_oss) <= 70.0:
+            valid_components.append(float(wheat_oss))
+        grade = float(sum(valid_components) / len(valid_components)) if len(valid_components) > 0 else 0.0
+        print(f"Grade (combined): {grade:.2f}")
         manualGen(rotated_obverse, rotated_reverse, grade, 1,
                   fm_grade_float=fm_grade_float,
                   left_score=left_grade, right_score=right_grade,
