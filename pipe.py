@@ -194,9 +194,12 @@ def runPre(obverse_path, reverse_path):
         grade_wheat = round(wheat_oss)
         grade = (fm_grade + grade_wheat) / 2
         print(f"Grade: {grade:.2f}")
-        manualGen(rotated_obverse, rotated_reverse, grade, 1)
+        manualGen(rotated_obverse, rotated_reverse, grade, 1,
+                  fm_grade_float=fm_grade_float,
+                  left_score=left_grade, right_score=right_grade,
+                  wheat_sheldon=wheat_oss, elapsed_seconds=elapsed)
         
-def manualGen(obv_img, rev_img, grade, coin=0):
+def manualGen(obv_img, rev_img, grade, coin=0, *, fm_grade_float=None, left_score=None, right_score=None, wheat_sheldon=None, elapsed_seconds=None):
     obv_img = cv2.cvtColor(obv_img, cv2.COLOR_BGR2RGB)
     rev_img = cv2.cvtColor(rev_img, cv2.COLOR_BGR2RGB)
 
@@ -222,6 +225,16 @@ def manualGen(obv_img, rev_img, grade, coin=0):
     dr.conditionScore = grade
     dr.brillianceScore = None
     dr.histBrilliance = None
+
+    # Attach LWC-specific metrics for the tailored report
+    dr.lwc_metrics = {
+        "featureMatchGrade": fm_grade_float if fm_grade_float is not None else grade,
+        "wheatLeftScore": left_score,
+        "wheatRightScore": right_score,
+        "wheatSheldon": wheat_sheldon,
+        "combinedGrade": grade,
+        "elapsedSeconds": elapsed_seconds,
+    }
 
     print("Manual Report Generation Started")
 

@@ -97,6 +97,9 @@ class PDF(FPDF):
         self._col1_x = 20.0
         self._col2_x = 110.0
 
+        # LWC-only metrics (replaces overlay pages with a metrics section)
+        self.lwc_metrics = None  # dict: featureMatchGrade, wheatLeftScore, wheatRightScore, wheatSheldon, combinedGrade, elapsedSeconds
+
     # ----------------------------- utilities -----------------------------
 
     # Convert ndarray/path/PIL to PIL.Image
@@ -324,11 +327,19 @@ class PDF(FPDF):
                             txt="Detected coin circle -> " + "  |  ".join(hough_bits), border=0)
 
         # Description of how to read the rest of the report
-        desc = (
-            "Condition uses edge density under coin specific masks. "
-            "Overlays highlight detected problem regions (flat, high significance, "
-            "low significance, rim)."
-        )
+        if self.coin_name == "Lincoln Wheat Cent":
+            desc = (
+                "For Lincoln Wheat Cent, condition is computed from two signals:\n"
+                "  - Feature-matching grade (template correlation)\n"
+                "  - Wheat-stalk analysis (left/right bands mapped to Sheldon grade)\n"
+                "This flow does not use mask overlays, so the report omits overlay pages."
+            )
+        else:
+            desc = (
+                "Condition uses edge density under coin specific masks. "
+                "Overlays highlight detected problem regions (flat, high significance, "
+                "low significance, rim)."
+            )
         self.set_xy(20.0, 60.0)
         self.set_font('Arial', '', 10)
         self.multi_cell(w=PDF_WIDTH - 40.0, h=4.8, align='L', txt=desc, border=0)
@@ -433,6 +444,38 @@ class PDF(FPDF):
 
     # ========================= Build and Cleanup ==========================
 
+    # LWC Page 2: metrics block (used when overlays are not available)
+    def _gen_lwc_metrics_block(self):
+        self.set_xy(20.0, 80.0)
+        self.set_font('Arial', 'B', 12)
+        self.cell(w=PDF_WIDTH - 40.0, h=8.0, align='L', txt="Lincoln Wheat Cent Metrics", border=0)
+
+        self.set_xy(20.0, 90.0)
+        self.set_font('Arial', '', 11)
+        metrics = self.lwc_metrics or {}
+
+        def _fmt(name, key, suffix=""):
+            val = metrics.get(key, None)
+            try:
+                import numpy as _np
+                if isinstance(val, (int, float)) and _np.isfinite(val):
+                    return f"{name}: {val:.2f}{suffix}"
+            except Exception:
+                pass
+            if isinstance(val, (int, float)):
+                return f"{name}: {val}{suffix}"
+            return f"{name}: N/A"
+
+        lines = [
+            _fmt("Feature-Match Grade", "featureMatchGrade"),
+            _fmt("Wheat Stalk - Left", "wheatLeftScore"),
+            _fmt("Wheat Stalk - Right", "wheatRightScore"),
+            _fmt("Wheat Stalk - Sheldon", "wheatSheldon"),
+            _fmt("Combined Grade", "combinedGrade"),
+            _fmt("Processing Time", "elapsedSeconds", " s"),
+        ]
+        self.multi_cell(w=PDF_WIDTH - 40.0, h=6.0, align='L', txt="\n".join(lines), border=0)
+
     # Assemble all pages and write the PDF
     def build_report(self, output_path: str = 'MorganSilverDollar/Morgan_Dollar_main/test.pdf'):
         """Assemble all pages and write the PDF to disk, cleaning temp files afterwards."""
@@ -442,15 +485,19 @@ class PDF(FPDF):
 
         self.add_page()                     # Page 2
         self.genTextPageTwo_Scores()
-        self.genImagesPageTwo_Scores()      # reserved no-op
+        if self.coin_name == "Lincoln Wheat Cent":
+            # LWC: show metrics here and skip overlay pages
+            self._gen_lwc_metrics_block()
+        else:
+            self.genImagesPageTwo_Scores()      # reserved no-op
 
-        self.add_page()                     # Page 3
-        self.genTextPageThree()
-        self.genImagesPageThree()
+            self.add_page()                     # Page 3
+            self.genTextPageThree()
+            self.genImagesPageThree()
 
-        self.add_page()                     # Page 4
-        self.genTextPageFour()
-        self.genImagesPageFour()
+            self.add_page()                     # Page 4
+            self.genTextPageFour()
+            self.genImagesPageFour()
 
         out_dir = os.path.dirname(output_path)
         if out_dir and not os.path.exists(out_dir):
