@@ -458,22 +458,28 @@ class PDF(FPDF):
             val = metrics.get(key, None)
             try:
                 import numpy as _np
+                # Only show if strictly within (0, 70]; hide zeros/negatives and >70
                 if isinstance(val, (int, float)) and _np.isfinite(val):
-                    return f"{name}: {val:.2f}{suffix}"
+                    v = float(val)
+                    if 0.0 < v <= 70.0:
+                        return f"{name}: {v:.2f}{suffix}"
             except Exception:
                 pass
-            if isinstance(val, (int, float)):
-                return f"{name}: {val}{suffix}"
-            return f"{name}: N/A"
+            # Return None to indicate hidden line
+            return None
 
-        lines = [
+        # Build lines, skipping any that are missing or non-positive
+        maybe_lines = [
             _fmt("Feature-Match Grade", "featureMatchGrade"),
             _fmt("Wheat Stalk - Left", "wheatLeftScore"),
             _fmt("Wheat Stalk - Right", "wheatRightScore"),
             _fmt("Wheat Stalk - Sheldon", "wheatSheldon"),
             _fmt("Combined Grade", "combinedGrade"),
-            _fmt("Processing Time", "elapsedSeconds", " s"),
+            # Processing time intentionally omitted
         ]
+        lines = [ln for ln in maybe_lines if isinstance(ln, str) and len(ln) > 0]
+        if len(lines) == 0:
+            lines = ["No metrics available"]
         self.multi_cell(w=PDF_WIDTH - 40.0, h=6.0, align='L', txt="\n".join(lines), border=0)
 
     # Assemble all pages and write the PDF
